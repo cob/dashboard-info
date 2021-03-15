@@ -1,4 +1,4 @@
-const { getServer, getLogin } = require("./Credentials")
+const { getServer, getUsername } = require("@cob/rest-api-wrapper")
 
 //Add suport for localstorage in node
 if (typeof window === 'undefined' && typeof global.localStorage === 'undefined') {
@@ -13,7 +13,7 @@ AbstractInfo = function(cacheId, validity, notifyChangeCB) {
   this.notifyChangeCB = notifyChangeCB
   this.server = getServer()
   this._cleanStore()  // preemptivamente limpa todos os valores na cache expirados quando arranca
-  if(this.delayUpdateCycle != true) this._updateValueCycle()
+  this._updateValueCycle()
 }
 
 AbstractInfo.prototype._updateValueCycle = function () {
@@ -22,8 +22,8 @@ AbstractInfo.prototype._updateValueCycle = function () {
 }
 
 AbstractInfo.prototype._updateValue = function () {
-  let username = getLogin()
-  if(!username) return
+  let username = getUsername()
+  if(!username) return // we still don't have a username. Wait for next cycle
   
   let now = Date.now();
   let myCacheId = username + '-' + this.cacheId
@@ -60,12 +60,13 @@ AbstractInfo.prototype._updateValue = function () {
 }
 
 AbstractInfo.prototype._getNewValue =function () {
-    // Isto tem de ser definido por quem inclui este mixin.
-    // Esta definição é só um exemplo que pode ser usado durante o desenvolvimento
-    // O resultado tem sempre de ser uma promise
-    return new Promise( (resolve) => {
-      resolve(Math.floor(Math.random() * 100))
-    })
+  // Isto tem de ser definido por quem inclui este mixin.
+  // Esta definição é só um exemplo que pode ser usado durante o desenvolvimento
+  // O resultado tem sempre de ser o número de calls a este método da instância
+  if(typeof this._callCount === "undefined") this._callCount = 1
+  return new Promise( (resolve) => {
+    resolve(this._callCount++)
+  })
 }
 
 AbstractInfo.prototype._cleanStore = function() {
