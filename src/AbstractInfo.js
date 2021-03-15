@@ -13,12 +13,12 @@ AbstractInfo = function(cacheId, validity, notifyChangeCB) {
   this.notifyChangeCB = notifyChangeCB
   this.server = getServer()
   this._cleanStore()  // preemptivamente limpa todos os valores na cache expirados quando arranca
-  this._updateValueCycle()
+  this.startUpdates()
 }
 
 AbstractInfo.prototype._updateValueCycle = function () {
   this._updateValue();
-  setTimeout(() => { this._updateValueCycle() }, this.validity * 1000)
+  this.cycle = setTimeout(() => { this._updateValueCycle() }, this.validity * 1000)
 }
 
 AbstractInfo.prototype._updateValue = function () {
@@ -60,9 +60,9 @@ AbstractInfo.prototype._updateValue = function () {
 }
 
 AbstractInfo.prototype._getNewValue =function () {
-  // Isto tem de ser definido por quem inclui este mixin.
-  // Esta definição é só um exemplo que pode ser usado durante o desenvolvimento
-  // O resultado tem sempre de ser o número de calls a este método da instância
+  // Isto tem de ser definido por quem herda esta classe.
+  // Esta função é só um exemplo que pode ser usado durante o desenvolvimento.
+  // Para efeitos de teste devolve o número de calls a esta função da instância.
   if(typeof this._callCount === "undefined") this._callCount = 1
   return new Promise( (resolve) => {
     resolve(this._callCount++)
@@ -93,11 +93,19 @@ AbstractInfo.prototype.getValue =function () {
 AbstractInfo.prototype.forceRefresh = function() {
   // if there's no this.cacheId it means we're still initiating, no need to update
   if(this.cacheId) { 
-    let myCacheId = getLogin() + this.cacheId
+    let myCacheId = getUsername() + this.cacheId
     localStorage.setItem(myCacheId + "_ExpirationTime", 0);
     this._updateValue();
   }
   this._cleanStore()  // aproveita para preemptivamente voltar a limpar todos os valores na cache expirados
+}
+
+AbstractInfo.prototype.stopUpdates = function() {
+  clearTimeout(this.cycle)
+}
+
+AbstractInfo.prototype.startUpdates = function() {
+  this._updateValueCycle()
 }
 
 module.exports = { AbstractInfo };
