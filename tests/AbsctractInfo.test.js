@@ -129,3 +129,6 @@ test('stopping updates should stop calling _getNewValue() ', async () => {
         expect(ai.getValue()).toBe(1) 
     })    
 })
+
+
+//TODO: after a refresh expect _getNewValue allways to be called (in particular if validity hadn't expired)

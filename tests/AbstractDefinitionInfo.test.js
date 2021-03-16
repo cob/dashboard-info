@@ -1,20 +1,22 @@
 /** @jest-environment node */
 const { AbstractDefinitionInfo } = require("../src/AbstractDefinitionInfo")
 
-const sleep = function (t) {
-    return new Promise (resolve => {
-        setTimeout(() => resolve(),t)
-    })
-}
-
-test('for learning app, "countries series" is definition 2 ', async () => {
+test('new AbstractDefinitionInfo sets def and query ', async () => {
     const mockUpdateCb = jest.fn()
     adi = new AbstractDefinitionInfo("b1","Countries Series", "*", 1, mockUpdateCb )
+    expect(adi.def).toBe("Countries Series")
+    expect(adi.query).toBe("*")
+    adi.stopUpdates();
+})
 
-    
-    await sleep(1000).then( () => {
-        expect(adi.resultsUrl).toBe("/recordm/#/definitions/2/q=*")
-        expect(adi.queryUrl).toBe("/recordm/recordm/definitions/search/name/Countries Series?from=0&size=0&q=*")
-        adi.stopUpdates()
-    })
+test('updating the query should force a _getNewValue call', () => {
+    const mockUpdateCb = jest.fn()
+    adi = new AbstractDefinitionInfo("c1","Countries Series", "query1", 1, mockUpdateCb )
+
+    expect(adi.query).toBe("query1")
+    // expect(dc._getNewValue).toHaveBeenCalled(1)  TODO
+    adi.setQuery("query2")
+    expect(adi.query).toBe("query2")
+    adi.stopUpdates()
+    // expect(dc._getNewValue).toHaveBeenCalled(2) TODO
 })
