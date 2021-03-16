@@ -15,7 +15,7 @@ AbstractDomainInfo.prototype.setQuery =function (query) {
     .replace('__DOMAIN_ID__',this.domainId)
     .replace('__QUERY__',query)
 
-  this.resultsURL = ResultsURLTemplate
+  this.resultsUrl = ResultsURLTemplate
     .replace('__DOMAIN_ID__',this.defId)
     .replace('__QUERY__',this.query);
 

@@ -7,13 +7,13 @@ Instances = function()  {
   // We need to delay the AbstractInfo launch of _updateValueCycle because
   // after calling the super constructor AbstractDefinitionInfo, which will setup the quertUrl,
   // we still need to change that query.
-  this.delayUpdateCycle = true
+  this.dontStartUpdateCycle = true
 
   AbstractDefinitionInfo.apply(this, arguments) 
   this.queryUrl = this.queryUrl.replace('&size=0&','&size=500&')
 
   // now we can launch the update cycle
-  this._updateValueCycle()
+  this.startUpdates()
 }
 Instances.prototype = Object.create(AbstractDefinitionInfo.prototype);
 

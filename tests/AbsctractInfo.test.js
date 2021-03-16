@@ -13,10 +13,10 @@ localStorage = new Storage('./db.json', { strict: false, ws: '  ' });
 
 test('getValue() starts by returning cached value', async () => {
     //Setup cache with "42", the answer for everything
-    localStorage.setItem("anonymous-y_Value",42)
+    localStorage.setItem("anonymous-a1_Value",42)
     
     const mockUpdateCb = jest.fn()
-    ai = new AbstractInfo("y",0.2, mockUpdateCb )
+    ai = new AbstractInfo("a1",0.2, mockUpdateCb )
     const bound = mockUpdateCb.bind(ai);
     bound();
     
@@ -33,11 +33,11 @@ test('getValue() starts by returning cached value', async () => {
 
 
 test('getValue() should increase 1 per "validity" time', async () => {
-    //Clear x cache
-    localStorage.removeItem("anonymous-x_Value")
+    //Clear a cache
+    localStorage.removeItem("anonymous-a2_Value")
 
     const mockUpdateCb = jest.fn()
-    ai = new AbstractInfo("x","1", mockUpdateCb )
+    ai = new AbstractInfo("a2","1", mockUpdateCb )
     const bound = mockUpdateCb.bind(ai);
     bound();
 
@@ -72,11 +72,11 @@ test('getValue() should increase 1 per "validity" time', async () => {
 
 
 test('2 objects for the same info should only call 1 _getNewValue() every "validity" period ', async () => {
-    //Clear x cache
-    localStorage.removeItem("anonymous-z_Value")
+    //Clear a cache
+    localStorage.removeItem("anonymous-a3_Value")
 
     const mockUpdateCb = jest.fn()
-    ai1 = new AbstractInfo("z","1", mockUpdateCb )
+    ai1 = new AbstractInfo("a3","1", mockUpdateCb )
     const bound = mockUpdateCb.bind(ai);
     bound();
 
@@ -88,7 +88,7 @@ test('2 objects for the same info should only call 1 _getNewValue() every "valid
     })
 
     await sleep(500).then( () => {
-        ai2 = new AbstractInfo("z","1", mockUpdateCb )
+        ai2 = new AbstractInfo("a3","1", mockUpdateCb )
         // _getNewValue() should not need to be called (cache is still valid)
         expect(ai2.getValue()).toBe(1) 
     })
@@ -108,11 +108,11 @@ test('2 objects for the same info should only call 1 _getNewValue() every "valid
 
 
 test('stopping updates should stop calling _getNewValue() ', async () => {
-    //Clear x cache
-    localStorage.removeItem("anonymous-w_Value")
+    //Clear a cache
+    localStorage.removeItem("anonymous-a4_Value")
 
     const mockUpdateCb = jest.fn()
-    ai = new AbstractInfo("w","1", mockUpdateCb )
+    ai = new AbstractInfo("a4","1", mockUpdateCb )
     const bound = mockUpdateCb.bind(ai);
     bound();
 

@@ -13,7 +13,7 @@ AbstractInfo = function(cacheId, validity, notifyChangeCB) {
   this.notifyChangeCB = notifyChangeCB
   this.server = getServer()
   this._cleanStore()  // preemptivamente limpa todos os valores na cache expirados quando arranca
-  this.startUpdates()
+  if(!this.dontStartUpdateCycle) this.startUpdates()
 }
 
 AbstractInfo.prototype._updateValueCycle = function () {

@@ -6,10 +6,10 @@ const ResultsURLTemplate = "/recordm/#/definitions/__DEF_ID__/q=__QUERY__"
 
 AbstractDefinitionInfo = function(cacheId, def, query, validity, notifyChangeCB)  { 
   this.def = def
-  this.delayUpdateCycle = true
+  this.query = query
+  this.dontStartUpdateCycle = true
   AbstractInfo.apply(this, [cacheId, validity, notifyChangeCB] )
   this.setQuery(query)
-  this._updateValueCycle()
 }
 AbstractDefinitionInfo.prototype = Object.create(AbstractInfo.prototype);
 
@@ -22,9 +22,10 @@ AbstractDefinitionInfo.prototype.setQuery =function (query) {
     .get(this.server + "/recordm/recordm/definitions/name/" + this.def)
     .then(response => {
       let defId = response.data.id
-      this.resultsURL = ResultsURLTemplate
+      this.resultsUrl = ResultsURLTemplate
         .replace('__DEF_ID__', defId)
         .replace('__QUERY__', this.query);
+      this.startUpdates()
     })
     .catch(e => {
       console.log(e)
