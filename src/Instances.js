@@ -3,18 +3,7 @@ const { getToken, setToken } = require("./Credentials")
 const axios = require('axios');
 axios.defaults.withCredentials = true
 
-Instances = function()  { 
-  // We need to delay the AbstractInfo launch of _updateValueCycle because
-  // after calling the super constructor AbstractDefinitionInfo, which will setup the quertUrl,
-  // we still need to change that query.
-  this.dontStartUpdateCycle = true
-
-  AbstractDefinitionInfo.apply(this, arguments) 
-  this.queryUrl = this.queryUrl.replace('&size=0&','&size=500&')
-
-  // now we can launch the update cycle
-  this.startUpdates()
-}
+Instances = function()  { AbstractDefinitionInfo.apply(this, arguments) }
 Instances.prototype = Object.create(AbstractDefinitionInfo.prototype);
 
 Instances.prototype._getNewValue = function () {

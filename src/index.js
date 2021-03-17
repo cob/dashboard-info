@@ -1,8 +1,8 @@
-const { login, setServer, setToken } = require("./Credentials")
+const { auth, setServer } = require("@cob/rest-api-wrapper")
 
-const {DomainCount} = require("./DomainCount")
 const {DefinitionCount} = require("./DefinitionCount")
-const {Instances} = require("./Instances")
+// const {DomainCount} = require("./DomainCount")
+// const {Instances} = require("./Instances")
 
 
-module.exports = { DomainCount, DefinitionCount, Instances, login, setServer, setToken };
+module.exports = { DefinitionCount/*, DomainCount,  Instances*/, auth, setServer };

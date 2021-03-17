@@ -12,8 +12,11 @@ AbstractInfo = function(cacheId, validity, notifyChangeCB) {
   this.validity = validity
   this.notifyChangeCB = notifyChangeCB
   this.server = getServer()
+  this.firstValueCommunicated = false;
+  this.firstUrlCommunicated = false;
+  this.resultsUrl = ""
   this._cleanStore()  // preemptivamente limpa todos os valores na cache expirados quando arranca
-  if(!this.dontStartUpdateCycle) this.startUpdates()
+  this.startUpdates()
 }
 
 AbstractInfo.prototype._updateValueCycle = function () {
@@ -37,6 +40,10 @@ AbstractInfo.prototype._updateValue = function () {
   var storedValue = localStorage.getItem(myCacheId + "_Value");
   if (storedValue != null && storedValue !== 'undefined') {
     this.value = JSON.parse(storedValue); // Se existir começa por usar a cache
+    if(!this.firstValueCommunicated) {
+      this.firstValueCommunicated = true
+      this.notifyChangeCB(this.value, this.resultsUrl)
+    }
   }
   let expirationTime = localStorage.getItem(myCacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente antes do teste à expiração para minimizar tempo de colisão
   
@@ -45,9 +52,11 @@ AbstractInfo.prototype._updateValue = function () {
     localStorage.setItem(myCacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto primeiro para minimizar tempo de colisão
 
     this._getNewValue().then(value => {
-      if(JSON.stringify(this.value) != JSON.stringify(value)) {
+      if(JSON.stringify(this.value) != JSON.stringify(value) || this.resultsUrl && !this.firstUrlCommunicated ) {
         this.value = value;
-        this.notifyChangeCB(value)
+        this.firstValueCommunicated = true // Para o caso de esta ser a primeira chamada
+        this.firstUrlCommunicated = true // Para o caso de esta ser a primeira chamada
+        this.notifyChangeCB(value, this.resultsUrl)
       } 
     }).catch(e => {
       // this.errors = e; //Debug info only
