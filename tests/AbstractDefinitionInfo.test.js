@@ -14,9 +14,7 @@ test('updating the query should force a _getNewValue call', () => {
     adi = new AbstractDefinitionInfo("c1","Countries Series", "query1", 1, mockUpdateCb )
 
     expect(adi.query).toBe("query1")
-    // expect(dc._getNewValue).toHaveBeenCalled(1)  TODO
     adi.setQuery("query2")
     expect(adi.query).toBe("query2")
     adi.stopUpdates()
-    // expect(dc._getNewValue).toHaveBeenCalled(2) TODO
 })

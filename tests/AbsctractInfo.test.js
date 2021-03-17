@@ -61,8 +61,8 @@ test('getValue() should increase 1 per "validity" time', async (done) => {
             sleep(600).then( () => {
                 expect(ai.getValue()).toBe(1)
                 expect(mockUpdateCb.mock.calls.length).toBe(2)
-                //Total time: 1200ms => now the value should change and we have another call to CB
-                sleep(300).then( () => {
+                //Total time: 1300ms => now the value should change and we have another call to CB
+                sleep(400).then( () => {
                     expect(ai.getValue()).toBe(2)
                     expect(mockUpdateCb.mock.calls.length).toBe(3)
                     ai.stopUpdates()

@@ -1,5 +1,6 @@
 /** @jest-environment node */
 const { DefinitionCount } = require("../src/DefinitionCount")
+const { auth, rmAddInstance, rmDeleteInstance } = require("@cob/rest-api-wrapper")
 
 const sleep = function (t) {
     return new Promise (resolve => {
@@ -7,34 +8,87 @@ const sleep = function (t) {
     })
 }
 
-test('for learning app, "countries series" count for "Arab world" is 20', async () => {
+test('for learning app, "countries series" count for "Arab world" is 20', (done) => {
     const mockUpdateCb = jest.fn()
     dc = new DefinitionCount("c1","Countries Series", "Arab world", 1, mockUpdateCb )
     dc.forceRefresh()
     
-    await sleep(1000).then( () => {
+    return sleep(1000).then( () => {
         expect(dc.getValue()).toBe(20)
         dc.stopUpdates()
+        done()
+    })
+    .catch( e => {
+        done(e)
     })
 })
 
-test('if we add another series, "countries series" count for "Arab world" is 21, but only after 1 second', async () => {
+
+
+test('changing querys for "countries series" from "Arab world" to "united" should change 20 to 60', (done) => {
     const mockUpdateCb = jest.fn()
     dc = new DefinitionCount("c2","Countries Series", "Arab world", 1, mockUpdateCb )
     
-    
-    await sleep(1000).then( () => {
-        //TODO: add record
+    return sleep(500).then( () => {
         expect(dc.getValue()).toBe(20)
+        expect(dc.resultsUrl).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab world")
+
+        dc.setQuery("United")
+        sleep(1000).then( () => {
+            expect(dc.getValue()).toBe(60)
+            expect(dc.resultsUrl).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=United")
+            dc.stopUpdates()
+            done()
+        })
+        .catch( e => {
+            dc.stopUpdates()
+            done(e)
+        })
     })
-    
-    // await sleep(1000).then( () => {
-    //     expect(dc.getValue()).toBe(21)
-    //     //TODO: delete record
-    // })
-    
-    await sleep(1000).then( () => {
-        expect(dc.getValue()).toBe(20)
+    .catch( e => {
         dc.stopUpdates()
+        done(e)
+    })
+})
+
+
+test('if we add another instance, should be 1 more', (done) => {
+    const mockUpdateCb = jest.fn() 
+    localStorage.removeItem("anonymous-c3_Value")
+    
+    return auth("jestTests", "1jestTests2")
+    .then( () => {
+        dc = new DefinitionCount("c3","Test Person", "DefinitionCount Test", 1, mockUpdateCb )
+
+        sleep(200).then( () => {
+            expect(dc.getValue()).toBe(0)
+            rmAddInstance("Test Person", {"Name": "DefinitionCount Test"})
+            .then( result => {
+                dc.forceRefresh()
+                sleep(1100).then( () => {
+                    expect(dc.getValue()).toBe(1)
+                    rmDeleteInstance(result.id)
+                    sleep(500).then( () => {
+                        dc.stopUpdates()
+                        done()
+                    })
+                    .catch( e => {
+                        done(e)
+                    })
+                })
+                .catch( e => {
+                    done(e)
+                })
+            })
+            .catch( e => {
+                done(e)
+            })
+        })
+        .catch( e => {
+            done(e)
+        })
+    })
+    .catch( e => {
+        done(e)
     })
 })

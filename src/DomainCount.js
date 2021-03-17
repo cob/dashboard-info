@@ -1,21 +1,31 @@
-const { AbstractDomainInfo } = require("./AbstractDomainInfo");
-const { getToken, setToken } = require("./Credentials")
-const axios = require('axios');
-axios.defaults.withCredentials = true
+const { AbstractInfo } = require("./AbstractInfo");
+const { rmDomainSearch } = require("@cob/rest-api-wrapper")
 
-DomainCount = function()  { AbstractDomainInfo.apply(this, arguments) }
-DomainCount.prototype = Object.create(AbstractDomainInfo.prototype);
+const QueryURLTemplate =  "/recordm/recordm/domains/search/__DOMAIN_ID__?from=0&size=0&q=__QUERY__"
+const ResultsURLTemplate = "/recordm/#/domain/__DOMAIN_ID__/q=__QUERY__"
+
+DomainCount = function(cacheId, domainId, query, validity, notifyChangeCB)  { 
+  this.domainId = domainId
+  this.setQuery(query)
+  AbstractInfo.apply(this, [cacheId, validity, notifyChangeCB] )
+}
+DomainCount.prototype = Object.create(AbstractInfo.prototype);
+
+
+AbstractDefinitionInfo.prototype.setQuery =function (query) {
+  this.query = query 
+  this.forceRefresh()
+}
+
 
 DomainCount.prototype._getNewValue = function () {
-  axios.defaults.headers.Cookie = getToken()
-  return axios
-    .get(this.server + this.queryUrl)
+  return rmDomainSearch(this.domainId,this.query)
     .then(response => {
-      setToken(response.headers["set-cookie"])
-      return response.data.hits.total.value
+      this.resultsUrl = response.resultsUrl
+      return response.hits.total.value
     })
     .catch ( e => {
-      console.log(e)
+      throw(e)
     })
 }
 
