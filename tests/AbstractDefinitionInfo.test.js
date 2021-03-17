@@ -1,7 +1,7 @@
 /** @jest-environment node */
 const { AbstractDefinitionInfo } = require("../src/AbstractDefinitionInfo")
 
-test('new AbstractDefinitionInfo sets def and query ', async () => {
+test('new AbstractDefinitionInfo sets def and query ', () => {
     const mockUpdateCb = jest.fn()
     adi = new AbstractDefinitionInfo("b1","Countries Series", "*", 1, mockUpdateCb )
     expect(adi.def).toBe("Countries Series")

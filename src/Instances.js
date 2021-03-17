@@ -1,21 +1,16 @@
 const { AbstractDefinitionInfo } = require("./AbstractDefinitionInfo");
-const { getToken, setToken } = require("./Credentials")
-const axios = require('axios');
-axios.defaults.withCredentials = true
+const { rmDefinitionSearch } = require("@cob/rest-api-wrapper")
 
 Instances = function()  { AbstractDefinitionInfo.apply(this, arguments) }
 Instances.prototype = Object.create(AbstractDefinitionInfo.prototype);
 
 Instances.prototype._getNewValue = function () {
-  axios.defaults.headers.Cookie = getToken()
-  return axios
-    .get(this.server + this.queryUrl)
-    .then(response => {
-      setToken(response.headers["set-cookie"])
-      return response.data.hits.hits.map(e => e._source)
+  return rmDefinitionSearch(this.def,this.query, 0, 10)
+    .then(results => {
+      return results.hits.hits.map(e => e._source)
     })
     .catch ( e => {
-      console.log(e)
+      throw(e)
     })
 }
 
