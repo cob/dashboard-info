@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@cob/dashboard-info": "^1.1.0",
-    "@cob/rest-api-wrapper": "^1.4.2",
+    "@cob/rest-api-wrapper": "^1.5.0",
     "axios": "^0.21.1",
     "dom-storage": "^2.1.0"
   },
