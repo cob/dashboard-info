@@ -6,6 +6,8 @@ Each function takes care of caching, pooling and sincronizing diferent agents fo
 
 ## Install
 
+In your project directory run:
+
 ```
  npm i @cob/dashboard-info
 ````
@@ -18,8 +20,10 @@ node:
 Browser
  import { auth, DefinitionCount } from "@cob/dashboard-info"
 
-set server
-auth
+Example in node:
+setServer(...)
+auth(...)
+(all components will use current logged in user - 2nd login wil overwrite 1st one)
 
 ask information setting up callback
 
@@ -46,6 +50,22 @@ After initializing `DefinitionCount` and `DomainCount` will call *notifyChangeCB
     const { Instances } = require("@cob/dashboard-info")
     let info = new Instances(cacheId, def, query, validity, notifyChangeCB)
 ```
+
+`FieldSum` gets the sum of values in a specific field from a specific definition
+
+```javascript
+    const { FieldSum } = require("@cob/dashboard-info")
+    let info = new FieldSum(defId, fieldName, notifyChangeCB, validity, query,  cacheId)
+```
+
+
+`FieldDistinctValues` returns an array with the lists of different values existing a a specific field.
+
+```javascript
+    const { FieldDistinctValues } = require("@cob/dashboard-info")
+    let info = new FieldDistinctValues(defId, fieldName, notifyChangeCB, validity, query, size, cacheId)
+```
+
 
 Finally `setServer` and `auth` are only necessary if your application is not integrated in a cob dashboard, like a node script.
 
@@ -74,6 +94,16 @@ start()
  * styled_terminal_dashboard - a minimal terminal aplication that monitors the number of **Test Persons** in learning.cultofbits.com
 
 ## Library Development
+
+git clone @cob/dashboard-info
+cd dashboard-info
+npm run test
+
+OR
+
+npm install jest --global
+jest —watch 
+
  * Test are supposed to be running through development with `jest --watch -o`
  * If test have conflicting behaviore use `jest --watch -o --runInBand`
  * If a given test is failling try `test.only` to make sure it is not a conflict
