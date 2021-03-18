@@ -3,4 +3,5 @@ node_modules
 .idea
 *.iml
 .test.in.execution
-db.json
+db*.json
+examples/*/package-lock.json

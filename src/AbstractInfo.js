@@ -7,10 +7,11 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, { strict: true });
 }
 
-AbstractInfo = function(cacheId, validity, notifyChangeCB) {
+AbstractInfo = function(cacheId, query, validity, notifyChangeCB) {
   this.cacheId = cacheId
   this.validity = validity
   this.notifyChangeCB = notifyChangeCB
+  this.query = query 
   this.server = getServer()
   this.firstValueCommunicated = false;
   this.firstUrlCommunicated = false;
@@ -117,4 +118,8 @@ AbstractInfo.prototype.startUpdates = function() {
   this._updateValueCycle()
 }
 
+AbstractInfo.prototype.setQuery =function (query) {
+  this.query = query 
+  this.forceRefresh()
+}
 module.exports = { AbstractInfo };

@@ -8,7 +8,10 @@ const sleep = function (t) {
 }
 
 var Storage = require('dom-storage');
-localStorage = new Storage('./db.json', { strict: false, ws: '  ' });
+localStorage = new Storage('./db1.json', { strict: false, ws: '  ' });
+beforeAll(() => {
+    localStorage.clear()
+}); 
 
 
 test('getValue() starts by returning cached value', async () => {
@@ -16,7 +19,7 @@ test('getValue() starts by returning cached value', async () => {
     localStorage.setItem("anonymous-a1_Value",42)
     
     const mockUpdateCb = jest.fn()
-    ai = new AbstractInfo("a1",0.2, mockUpdateCb )
+    ai = new AbstractInfo("a1", "*", .2, mockUpdateCb )
     const bound = mockUpdateCb.bind(ai);
     bound();
     
@@ -32,13 +35,9 @@ test('getValue() starts by returning cached value', async () => {
 })
 
 
-
 test('getValue() should increase 1 per "validity" time', async (done) => {
-    //Clear a cache
-    localStorage.removeItem("anonymous-a2_Value")
-
     const mockUpdateCb = jest.fn()
-    ai = new AbstractInfo("a2", 1, mockUpdateCb )
+    ai = new AbstractInfo("a2", "*", 1, mockUpdateCb )
     const bound = mockUpdateCb.bind(ai);
     bound();
 
@@ -57,42 +56,27 @@ test('getValue() should increase 1 per "validity" time', async (done) => {
         sleep(200).then( () => {
             expect(ai.getValue()).toBe(1)
             expect(mockUpdateCb.mock.calls.length).toBe(2)
-            //Total time: 900ms => no change expected
-            sleep(600).then( () => {
+            //Total time: 600ms => no change expected
+            sleep(300).then( () => {
                 expect(ai.getValue()).toBe(1)
                 expect(mockUpdateCb.mock.calls.length).toBe(2)
-                //Total time: 1300ms => now the value should change and we have another call to CB
-                sleep(400).then( () => {
+                //Total time: 1400ms => now the value should change and we have another call to CB
+                sleep(800).then( () => {
+                    ai.stopUpdates()
                     expect(ai.getValue()).toBe(2)
                     expect(mockUpdateCb.mock.calls.length).toBe(3)
-                    ai.stopUpdates()
                     done()
                 })
-                .catch( e => {
-                    done(e)
-                })
-            })
-            .catch( e => {
-                done(e)
             })
         })
-        .catch( e => {
-            done(e)
-        })
-    })
-    .catch( e => {
-        done(e)
     })
 })
 
 
-test('2 objects for the same info should only call 1 _getNewValue() every "validity" period ', async (done) => {
-    //Clear a cache
-    localStorage.removeItem("anonymous-a3_Value")
-    
+test('2 objects for the same info should only call 1 _getNewValue() every "validity" period ', (done) => {
     const mockUpdateCb = jest.fn()
-    ai1 = new AbstractInfo("a3","1", mockUpdateCb )
-    const bound = mockUpdateCb.bind(ai);
+    ai1 = new AbstractInfo("a3", "*", "1", mockUpdateCb )
+    const bound = mockUpdateCb.bind(ai1);
     bound();
     
     expect(ai1.getValue()).toBe(undefined)
@@ -102,34 +86,34 @@ test('2 objects for the same info should only call 1 _getNewValue() every "valid
         expect(ai1.getValue()).toBe(1) 
         
         sleep(500).then( () => {
-            ai2 = new AbstractInfo("a3","1", mockUpdateCb )
+            ai2 = new AbstractInfo("a3", "*", "1", mockUpdateCb )
             // _getNewValue() should not need to be called (cache is still valid)
             expect(ai2.getValue()).toBe(1) 
 
-            sleep(500).then( () => {
-                // _getNewValue() should have another call (after 1.1s we need another value)
+            sleep(800).then( () => {
+                // _getNewValue() should have another call (after 1.4s we need another value)
                 ai1.stopUpdates()
                 expect(ai1.getValue()).toBe(2)
                 
-                sleep(700).then( () => {
-                    // _getNewValue() should not need to be called (cache is still valid)
+                sleep(600).then( () => {
+                    // _getNewValue() should not have needed to be called (cache is still valid) 
                     ai2.stopUpdates()
                     expect(ai2.getValue()).toBe(2)
                     done()
                 })    
-                .catch( e => {
-                    done(e)
-                })    
-            })    
-            .catch( e => {
-                done(e)
             })    
         })
         .catch( e => {
             done(e)
         })    
     })
-    .catch( e => {
-        done(e)
-    })    
+})
+
+test('updating the query should force a _getNewValue call', () => {
+    const mockUpdateCb = jest.fn()
+    adi = new AbstractInfo("a4", "query1", 1, mockUpdateCb )
+    adi.stopUpdates()
+    expect(adi.query).toBe("query1")
+    adi.setQuery("query2")
+    expect(adi.query).toBe("query2")
 })

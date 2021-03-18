@@ -8,14 +8,27 @@ const sleep = function (t) {
     })
 }
 
+var Storage = require('dom-storage');
+localStorage = new Storage('./db3.json', { strict: false, ws: '  ' });
+beforeAll(() => {
+    localStorage.clear()
+}); 
+
+test('new Instances sets def and query ', () => {
+    const mockUpdateCb = jest.fn()
+    adi = new Instances("Countries Series", mockUpdateCb, 1, "*", 10, "d1" )
+    adi.stopUpdates();
+    expect(adi.def).toBe("Countries Series")
+    expect(adi.query).toBe("*")
+})
+
 
 test('if we add 3 instances that is what we should get',  (done) => {
     const mockUpdateCb = jest.fn() 
-    localStorage.removeItem("anonymous-c3_Value")
     
     return auth("jestTests", "1jestTests2")
     .then( () => {
-        dc = new Instances("c3","Test Person", "Instances_Test*", 1, mockUpdateCb )
+        dc = new Instances("Test Person", mockUpdateCb, 1, "Instances_Test*", 3, "d3" )
 
         sleep(200).then( () => {
             expect(dc.getValue()).toEqual([])
@@ -44,16 +57,10 @@ test('if we add 3 instances that is what we should get',  (done) => {
                         dc.stopUpdates()
                         done()
                     })
-                    .catch( e => {
-                        done(e)
-                    })
                 })
                 .catch( e => {
                     done(e)
                 })
-            })
-            .catch( e => {
-                done(e)
             })
         })
         .catch( e => {

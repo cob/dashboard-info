@@ -2,24 +2,36 @@
 const { DefinitionCount } = require("../src/DefinitionCount")
 const { auth, rmAddInstance, rmDeleteInstance } = require("@cob/rest-api-wrapper")
 
+var Storage = require('dom-storage');
+localStorage = new Storage('./db2.json', { strict: false, ws: '  ' });
+beforeAll(() => {
+    localStorage.clear()
+}); 
+
 const sleep = function (t) {
     return new Promise (resolve => {
         setTimeout(() => resolve(),t)
     })
 }
 
+test('new DefinitionCount sets def and query ', () => {
+    const mockUpdateCb = jest.fn()
+    adi = new DefinitionCount("Countries Series",  mockUpdateCb, 1, "*", "c0" )
+    adi.stopUpdates();
+    expect(adi.def).toBe("Countries Series")
+    expect(adi.query).toBe("*")
+})
+
+
 test('for learning app, "countries series" count for "Arab world" is 20', (done) => {
     const mockUpdateCb = jest.fn()
-    dc = new DefinitionCount("c1","Countries Series", "Arab world", 1, mockUpdateCb )
+    dc = new DefinitionCount("Countries Series", mockUpdateCb, 1, "Arab world", "c1" )
     dc.forceRefresh()
     
     return sleep(1000).then( () => {
-        expect(dc.getValue()).toBe(20)
         dc.stopUpdates()
+        expect(dc.getValue()).toBe(20)
         done()
-    })
-    .catch( e => {
-        done(e)
     })
 })
 
@@ -27,65 +39,46 @@ test('for learning app, "countries series" count for "Arab world" is 20', (done)
 
 test('changing querys for "countries series" from "Arab world" to "united" should change 20 to 60', (done) => {
     const mockUpdateCb = jest.fn()
-    dc = new DefinitionCount("c2","Countries Series", "Arab world", 1, mockUpdateCb )
+    dc = new DefinitionCount("Countries Series", mockUpdateCb, 1, "Arab world", "c2" )
     
     return sleep(500).then( () => {
-        expect(dc.getValue()).toBe(20)
         expect(dc.resultsUrl).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab world")
+        expect(dc.getValue()).toBe(20)
 
         dc.setQuery("United")
-        sleep(1000).then( () => {
-            expect(dc.getValue()).toBe(60)
-            expect(dc.resultsUrl).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=United")
+        sleep(2500).then( () => {
             dc.stopUpdates()
+            expect(dc.resultsUrl).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=United")
+            expect(dc.getValue()).toBe(60)
             done()
         })
-        .catch( e => {
-            dc.stopUpdates()
-            done(e)
-        })
-    })
-    .catch( e => {
-        dc.stopUpdates()
-        done(e)
     })
 })
 
 
-test('if we add another instance, should be 1 more', (done) => {
+test('if we add another instance then there should be 1 more', (done) => {
     const mockUpdateCb = jest.fn() 
-    localStorage.removeItem("anonymous-c3_Value")
     
     return auth("jestTests", "1jestTests2")
     .then( () => {
-        dc = new DefinitionCount("c3","Test Person", "DefinitionCount Test", 1, mockUpdateCb )
+        dc = new DefinitionCount("Test Person", mockUpdateCb, 1, "DefinitionCount Test", "c3" )
 
         sleep(200).then( () => {
+            // Needs to be 0 (zero) to work
+            // If not zero delete offending instances
             expect(dc.getValue()).toBe(0)
             rmAddInstance("Test Person", {"Name": "DefinitionCount Test"})
             .then( result => {
-                dc.forceRefresh()
-                sleep(1100).then( () => {
-                    expect(dc.getValue()).toBe(1)
+                sleep(1800).then( () => {
+                    dc.stopUpdates()
                     rmDeleteInstance(result.id)
-                    sleep(500).then( () => {
-                        dc.stopUpdates()
-                        done()
-                    })
-                    .catch( e => {
-                        done(e)
-                    })
-                })
-                .catch( e => {
-                    done(e)
+                    expect(dc.getValue()).toBe(1)
+                    done()
                 })
             })
             .catch( e => {
                 done(e)
             })
-        })
-        .catch( e => {
-            done(e)
         })
     })
     .catch( e => {
