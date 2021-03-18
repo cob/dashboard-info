@@ -26,7 +26,6 @@ test('new DefinitionCount sets def and query ', () => {
 test('for learning app, "countries series" count for "Arab world" is 20', (done) => {
     const mockUpdateCb = jest.fn()
     dc = new DefinitionCount("Countries Series", mockUpdateCb, 1, "Arab world", "c1" )
-    dc.forceRefresh()
     
     return sleep(1000).then( () => {
         dc.stopUpdates()
