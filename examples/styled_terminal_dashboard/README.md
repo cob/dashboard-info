@@ -2,7 +2,7 @@
 
 **styled_terminal_dashboard** is similar to the **basic_terminal_dashboard** but has a better styling.
 
-It will display a the result in a big font and change color depending on the number of records.
+It will display the result in a big font and change color depending on the number of records.
 
 Login to learning.cultofbits.com and change the list to see the changes reflected in the console.
 
