@@ -3,7 +3,7 @@ const { rmDomainSearch } = require("@cob/rest-api-wrapper")
 
 DomainCount = function(domainId, notifyChangeCB, validity="180", query="*", cacheId="")  { 
   this.domainId = domainId
-  if(!cacheId) cacheId = def + Math.floor(Math.random() * 100)
+  if(!cacheId) cacheId = domainId + Math.floor(Math.random() * 100)
   AbstractInfo.apply(this, [cacheId, query, validity, notifyChangeCB] )
 }
 DomainCount.prototype = Object.create(AbstractInfo.prototype);
