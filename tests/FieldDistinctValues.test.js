@@ -30,10 +30,10 @@ test('for "Arab world" there are 4 indicators', (done) => {
     return sleep(1000).then( () => {
         dc.stopUpdates()
         expect(dc.getValue()).toEqual([
-            { doc_count: 5, key: 'Alternative and nuclear energy (% of total energy use)' },
-            { doc_count: 5, key: 'GDP: linked series (current LCU)' },
-            { doc_count: 5, key: 'Population, total' },
-            { doc_count: 5, key: 'Surface area (sq. km)' }
+            'Alternative and nuclear energy (% of total energy use)',
+            'GDP: linked series (current LCU)',
+            'Population, total',
+            'Surface area (sq. km)'
           ])
         done()
     })

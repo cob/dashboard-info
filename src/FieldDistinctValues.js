@@ -23,7 +23,7 @@ FieldDistinctValues.prototype._getNewValue = function () {
   return rmDefinitionAdvSearch(this.defId, agg , this.query)
   .then(response => {
       this.resultsUrl = response.resultsUrl
-      return response.aggregations['sterms#x'].buckets
+      return response.aggregations['sterms#x'].buckets.map(e => e.key)
     })
     .catch ( e => {
       throw(e)
