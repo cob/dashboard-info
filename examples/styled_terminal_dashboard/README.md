@@ -6,10 +6,7 @@ It will display the result in a big font and change color depending on the numbe
 
 Login to learning.cultofbits.com and change the list to see the changes reflected in the console.
 
-<video controls width="650">
-    <source src="https://share.descript.com/embed/rN6Wu3axjOY">
-    Sorry, your browser doesn't support embedded videos.
-</video>
+[See Video](https://share.descript.com/embed/rN6Wu3axjOY)
 
 # Testing 
 
