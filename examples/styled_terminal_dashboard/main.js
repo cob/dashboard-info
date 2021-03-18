@@ -15,7 +15,7 @@ function showCB(value, resultsUrl) {
 
 async function start() {
     await auth("jestTests", "1jestTests2")
-    new DefinitionCount("c2","Test Person", "*", 1, showCB )
+    new DefinitionCount("Test Person", showCB, 1 )
 }
 
 start()
