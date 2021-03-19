@@ -5,11 +5,7 @@
 Login to learning.cultofbits.com and change the list to see the changes reflected in the console.
 
 
-<video controls width="650">
-    <source src="https://share.descript.com/embed/jab9Q9de4md">
-    Sorry, your browser doesn't support embedded videos.
-</video>
-
+[See Video](https://share.descript.com/embed/jab9Q9de4md)
 
 # Testing 
 
