@@ -4,7 +4,7 @@ const { rmDefinitionAdvSearch } = require("@cob/rest-api-wrapper")
 
 FieldDistinctValues = function(defId, fieldName, notifyChangeCB, validity="180", query="*", size=50, cacheId="")  { 
   this.defId = defId
-  this.fieldName = fieldName
+  this.fieldName = fieldName.endsWith(".raw") ? fieldName : fieldName + ".raw"
   this.size = size
   if(!cacheId) cacheId = defId + Math.floor(Math.random() * 100)
   AbstractInfo.apply(this, [cacheId, query, validity, notifyChangeCB] )
