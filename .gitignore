@@ -4,4 +4,5 @@ node_modules
 *.iml
 .test.in.execution
 db*.json
+.localstorage.json
 examples/*/package-lock.json
