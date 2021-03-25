@@ -23,15 +23,15 @@ npm install jest --global
 then run jest in watch mode and check for error during the normal development process. The `-o` flag means 'only test changed files'.
 
 ```
-jest —-watch -o
+node --experimental-vm-modules node_modules/.bin/jest —-watch -o
 ```
 
 
 # Test cenario baseline
 For the tests to run as planned there should be the following instances
 * In **Test Person** definition:
-    * "DefinitionCount Test": [0](https://learning.cultofbits.com/recordm/#/definitions/6/q="DefinitionCount%20Test") (zero)
-    * "Instances_Test*": [0](https://learning.cultofbits.com/recordm/#/definitions/6/q=Instances_Test*) (zero)
+    * "DefinitionCount Test_*": [0](https://learning.cultofbits.com/recordm/#/definitions/6/q="DefinitionCount%20Test_*") (zero)
+    * "Instances_Test_*": [0](https://learning.cultofbits.com/recordm/#/definitions/6/q=Instances_Test_*) (zero)
 * In **Country Series** definition: 
     * "Arab World": [20](https://learning.cultofbits.com/recordm/#/definitions/2/q="Arab%20World")
     * "United": [60](https://learning.cultofbits.com/recordm/#/definitions/2/q="United")
