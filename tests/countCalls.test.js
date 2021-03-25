@@ -16,7 +16,10 @@ test('each newCountCalls returns a countCall function that starts in 1', async (
     countCalls().then ( v => expect(v.value).toBe(4) )
 })
 
-test('countCall return a null href ', async () => {
-    let countCalls = newCountCalls("testCacheId")
-    countCalls().then ( v => expect(v.href).toBe(null) )
+test('countCall return a href for https://{{count}} ', async () => {
+    let countCalls = newCountCalls()
+    countCalls().then ( v => {
+        expect(v.value).toBe(1)
+        expect(v.href).toBe("https://1")
+    } )
 })

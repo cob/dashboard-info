@@ -1,5 +1,4 @@
 /** @jest-environment node */
-
 import DashInfo from "../src/DashInfo.js"
 import newCountCalls from "./CountCalls.js";
 import Storage from '../node_modules/dom-storage/lib/index.js'
@@ -23,11 +22,11 @@ test('every DashInfo value starts by beeing the last cached value', async () => 
     ai.stopUpdates()
 })
 
-test('DashInfo should only have a new value every 1s (validity used in test) ',  async () => {
+test('DashInfo should only have a new value every *validity* seconds ',  async () => {
     jest.useFakeTimers('modern')
     jest.setSystemTime(0)   
     
-    let a = new DashInfo( {validity:1}, newCountCalls(), "newIdHack")
+    let a = new DashInfo( {validity:1}, newCountCalls(), 0)
     expect(a.value).toBeUndefined()
     
     await Promise.resolve() //Allow other promises to resolve
@@ -70,7 +69,7 @@ test('DashInfo should only have a new value every 1s (validity used in test) ', 
     expect(a.value).toBe(4) // CHANGE TIME !
 })    
 
-test('2 objects for the same info should only call 1 _getNewValue() every "validity" period ', () => {
+test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds ', () => {
     //TODO
 })
 
@@ -82,8 +81,8 @@ test('if no cache available (no mem or no localstorage) it work without cache', 
     //TODO
 })
 
-// TODO: test changing query
-// test('changing querys for "countries series" from "Arab world" to "united" should change 20 to 60', (done) => {
+test('changing querys for "countries series" from "Arab world" to "united" should change 20 to 60', () => {
+// TODO
 //     const mockUpdateCb = jest.fn()
 //     dc = new DefinitionCount("Countries Series", mockUpdateCb, 1, "Arab world", "c2" )
     
@@ -99,6 +98,6 @@ test('if no cache available (no mem or no localstorage) it work without cache', 
 //             done()
 //         })
 //     })
-// })
+})
 
 // TODO: test changing query stops previous setTimeout

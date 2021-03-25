@@ -1,3 +1,5 @@
+import { auth, setServer } from "@cob/rest-api-wrapper"
+
 import DashInfo from "./DashInfo.js"
 
 import defCount from "./DefinitionCount.js"
@@ -14,4 +16,4 @@ const instances           = (definitionName,   query="*", size=10, options={}) =
 const fieldDistinctValues = (defId, fieldName, query="*", size=10, options={}) => new DashInfo(options, fDist, defId, fieldName, query, size)
 
 
-export { definitionCount, instances, domainCount, fieldSum, fieldDistinctValues }
+export { definitionCount, instances, domainCount, fieldSum, fieldDistinctValues, auth, setServer }

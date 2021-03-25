@@ -7,9 +7,9 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, { strict: true });
 }
 
-const DashInfo = function({validity=60, notifyChangeCB=()=>{}}, getterFunction, ...getterArgs) {
+const DashInfo = function({validity=60, changeCB=()=>{}}, getterFunction, ...getterArgs) {
   this.validity = validity
-  this.notifyChangeCB = notifyChangeCB
+  this.changeCB = changeCB
   this.getterArgs = getterArgs
   this.results = {value:undefined, href:undefined}
   this._getNewResults = () => getterFunction(...this.getterArgs)
@@ -41,21 +41,21 @@ DashInfo.prototype._updateResults = function () {
   if (storedResults != null && storedResults !== 'undefined') {
     this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
   }
-  let expirationTime = localStorage.getItem(cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente antes do teste à expiração para minimizar tempo de colisão
   
-  //Se a cache está fora de validade ou o tempo que falta para expirar é maior que a validade, então obtem novo valor
+  //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
+  let expirationTime = localStorage.getItem(cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
   if ( now > expirationTime || expirationTime - now > this.validity*1000 || storedResults == null ) {
-    // TODO: test available space or clean
-    localStorage.setItem(cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto primeiro para minimizar tempo de colisão
-
+    localStorage.setItem(cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
+    
     this._getNewResults().then( results => {
       if(JSON.stringify(this.results) != JSON.stringify(results)) {
         this.results = results
-        this.notifyChangeCB(results)
+        this.changeCB(results)
       } 
     }).catch( e => {})
     .finally( () => {
       if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
+        // TODO: test available space or clean
         localStorage.setItem(cacheId + "_Results", JSON.stringify(this.results))
       }
     })
