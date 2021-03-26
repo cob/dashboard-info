@@ -1,33 +1,23 @@
+import { rmDefinitionAdvSearch } from "@cob/rest-api-wrapper"
 
-const { AbstractInfo } = require("./AbstractInfo");
-const { rmDefinitionAdvSearch } = require("@cob/rest-api-wrapper")
-
-FieldDistinctValues = function(defId, fieldName, notifyChangeCB, validity="180", query="*", size=50, cacheId="")  { 
-  this.defId = defId
-  this.fieldName = fieldName
-  this.size = size
-  if(!cacheId) cacheId = defId + Math.floor(Math.random() * 100)
-  AbstractInfo.apply(this, [cacheId, query, validity, notifyChangeCB] )
-}
-FieldDistinctValues.prototype = Object.create(AbstractInfo.prototype);
-
-FieldDistinctValues.prototype._getNewValue = function () {
+const fieldDistinctValues = (defId, fieldName, query, size) => {
   let agg = {
     "x": {
       "terms": {
-        "field": this.fieldName,
-        "size": this.size
+        "field": fieldName,
+        "size": size
       }
     }
   }
-  return rmDefinitionAdvSearch(this.defId, agg , this.query)
-  .then(response => {
-      this.resultsUrl = response.resultsUrl
-      return response.aggregations['sterms#x'].buckets.map(e => e.key)
+
+  return rmDefinitionAdvSearch(defId, agg , query, 0, size)
+  .then(response => 
+    ({
+      value: response.aggregations['sterms#x'].buckets.map(e => e.key),
+      href: response.resultsUrl
     })
-    .catch ( e => {
-      throw(e)
-    })
+  )
+  .catch ( e => { throw(e) })
 }
 
-module.exports = { FieldDistinctValues }
+export default fieldDistinctValues

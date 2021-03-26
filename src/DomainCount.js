@@ -1,22 +1,13 @@
-const { AbstractInfo } = require("./AbstractInfo");
-const { rmDomainSearch } = require("@cob/rest-api-wrapper")
+import { rmDomainSearch } from "@cob/rest-api-wrapper"
 
-DomainCount = function(domainId, notifyChangeCB, validity="180", query="*", cacheId="")  { 
-  this.domainId = domainId
-  if(!cacheId) cacheId = domainId + Math.floor(Math.random() * 100)
-  AbstractInfo.apply(this, [cacheId, query, validity, notifyChangeCB] )
-}
-DomainCount.prototype = Object.create(AbstractInfo.prototype);
-
-DomainCount.prototype._getNewValue = function () {
-  return rmDomainSearch(this.domainId, this.query)
-    .then(response => {
-      this.resultsUrl = response.resultsUrl
-      return response.hits.total.value
+const domainCount = (domainId, query) => 
+  rmDomainSearch(domainId, query)
+  .then(response => 
+    ({
+      value: response.hits.total.value,
+      href: response.resultsUrl
     })
-    .catch ( e => {
-      throw(e)
-    })
-}
+  )
+  .catch ( e => { throw(e) })
 
-module.exports = { DomainCount }
+export default domainCount

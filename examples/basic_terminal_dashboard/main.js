@@ -1,12 +1,15 @@
-const { auth, DefinitionCount } = require("@cob/dashboard-info")
-
-function showCB(value, resultsUrl) {
-    console.log(value)
+function showCB(info) {
+    console.log(info.value)
 }
 
-async function start() {
-    await auth("jestTests", "1jestTests2")
-    new DefinitionCount("Test Person", showCB, 1 )
+async function main() {
+    const dashInfo = await import("@cob/dashboard-info")
+
+    dashInfo.setServer("https://learning.cultofbits.com") 
+    await dashInfo.auth("jestTests", "1jestTests2")
+
+    let total = dashInfo.definitionCount("Test Person", "*", {changeCB:showCB, validity:1} )
+    showCB(totalInfo) // Show initial information
 }
 
-start()
+main()

@@ -1,73 +1,33 @@
-/** @jest-environment node */
-const { Instances } = require("../src/Instances")
-const { auth, rmAddInstance, rmDeleteInstance } = require("@cob/rest-api-wrapper")
+/** @jest-environment node */ //For auth
+import instances from "../src/Instances.js"
+import { auth, rmAddInstance, rmDeleteInstance } from "@cob/rest-api-wrapper"
 
-const sleep = function (t) {
-    return new Promise (resolve => {
-        setTimeout(() => resolve(),t)
+const sleep = (t) => new Promise (resolve => setTimeout(() => resolve(),t))
+
+test('if we add 3 instances that is what we should get',  async () => {
+    var random = Math.floor(Math.random() * 1000)
+    await auth("jestTests", "1jestTests2")
+    await instances("Test Person", "Instances_Test_"+random+"_*")
+    .then( results => {
+        expect(results.value).toEqual([])
     })
-}
-
-var Storage = require('dom-storage');
-localStorage = new Storage('./db3.json', { strict: false, ws: '  ' });
-beforeAll(() => {
-    localStorage.clear()
-}); 
-
-test('new Instances sets def and query ', () => {
-    const mockUpdateCb = jest.fn()
-    adi = new Instances("Countries Series", mockUpdateCb, 1, "*", 10, "d1" )
-    adi.stopUpdates();
-    expect(adi.def).toBe("Countries Series")
-    expect(adi.query).toBe("*")
-})
-
-
-test('if we add 3 instances that is what we should get',  (done) => {
-    const mockUpdateCb = jest.fn() 
     
-    return auth("jestTests", "1jestTests2")
-    .then( () => {
-        dc = new Instances("Test Person", mockUpdateCb, 1, "Instances_Test*", 3, "d3" )
+    let p1,p2,p3
+    await rmAddInstance("Test Person", {"Name": "Instances_Test_"+random+"_1"}).then( result => p1 = result )
+    await rmAddInstance("Test Person", {"Name": "Instances_Test_"+random+"_2"}).then( result => p2 = result )
+    await rmAddInstance("Test Person", {"Name": "Instances_Test_"+random+"_3"}).then( result => p3 = result )
+    await sleep(800) // Wait for ES indexing
 
-        sleep(200).then( () => {
-            expect(dc.getValue()).toEqual([])
-
-            let p1,p2,p3
-            rmAddInstance("Test Person", {"Name": "Instances_Test1"}).then( result => p1 = result )
-            rmAddInstance("Test Person", {"Name": "Instances_Test2"}).then( result => p2 = result )
-            rmAddInstance("Test Person", {"Name": "Instances_Test3"}).then( result => p3 = result )
-
-            .then( result => {
-                dc.forceRefresh()
-                sleep(2100).then( () => {
-                    values = dc.getValue()
-                    
-                    rmDeleteInstance(p1.id)
-                    rmDeleteInstance(p2.id)
-                    rmDeleteInstance(p3.id)
-                    
-                    expect(values.length).toBe(3)
-
-                    expect(values[0].name[0]).toMatch(/Instances_Test[123]/)
-                    expect(values[1].name[0]).toMatch(/Instances_Test[123]/)
-                    expect(values[2].name[0]).toMatch(/Instances_Test[123]/)
-
-                    sleep(1500).then( () => {
-                        dc.stopUpdates()
-                        done()
-                    })
-                })
-                .catch( e => {
-                    done(e)
-                })
-            })
-        })
-        .catch( e => {
-            done(e)
-        })
+    await instances("Test Person", "Instances_Test_"+random+"*", 10)
+    .then( results => {
+        let values = results.value
+        expect(values.length).toBe(3)
+        expect(values[0].name[0]).toMatch(/Instances_Test_\d*_[123]/)
+        expect(values[1].name[0]).toMatch(/Instances_Test_\d*_[123]/)
+        expect(values[2].name[0]).toMatch(/Instances_Test_\d*_[123]/)
     })
-    .catch( e => {
-        done(e)
-    })
+
+    await rmDeleteInstance(p1.id)
+    await rmDeleteInstance(p2.id)
+    await rmDeleteInstance(p3.id)
 })
