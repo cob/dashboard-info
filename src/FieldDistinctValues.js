@@ -10,7 +10,7 @@ const fieldDistinctValues = (defId, fieldName, query, size) => {
     }
   }
 
-  return rmDefinitionAdvSearch(defId, agg , query)
+  return rmDefinitionAdvSearch(defId, agg , query, 0, size)
   .then(response => 
     ({
       value: response.aggregations['sterms#x'].buckets.map(e => e.key),

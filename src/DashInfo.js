@@ -1,4 +1,4 @@
-import { getUsername } from "@cob/rest-api-wrapper"
+import { umLoggedin } from "@cob/rest-api-wrapper"
 import Storage from '../node_modules/dom-storage/lib/index.js'
 
 //Add suport for localstorage in node
@@ -15,13 +15,18 @@ const DashInfo = function({validity=60, changeCB=()=>{}}, getterFunction, ...get
   this._getNewResults = () => getterFunction(...this.getterArgs)
   
   Object.defineProperties(this, {
-    "value": { "get": () => this.results.value },
-    "href":  { "get": () => this.results.href },
-    "id":  { "get": () => [getterFunction.name,...this.getterArgs].join("_") }
+    "value":  { "get": () => this.results.value },
+    "href":   { "get": () => this.results.href },
+    "id":     { "get": () => [getterFunction.name,...this.getterArgs].join("_") },
+    "cacheId":{ "get": () => this.username + '-' + this.id }
   })
   
   this._cleanStore()  // preemptivamente limpa todos os valores na cache expirados quando arranca
-  this.startUpdates()
+  umLoggedin().then( result => {
+    this.username = result.username;
+    this.startUpdates()
+  })
+  .catch( e => { throw e })
 
   //Se num browser, parar de fazer update quando se sai da página actual
   if(typeof window !== 'undefined') window.addEventListener('unload', () => this.stopUpdates() )
@@ -29,23 +34,27 @@ const DashInfo = function({validity=60, changeCB=()=>{}}, getterFunction, ...get
 }
 
 DashInfo.prototype._updateResults = function () {
-  let username = getUsername() // TODO: really get (and wait) for the user.
-  if(!username) return // we still don't have a username. Wait for next cycle
-  
+  umLoggedin().then( result => {
+    if(result.username != this.username) {
+      this.username = result.username;
+      this.forceRefresh()
+    }
+  })
+  .catch( e => { throw e })
+
   let now = Date.now();
   // console.log("Time:" +now) // FOR TEST DEBUGING ONLY
-  let cacheId = username + '-' + this.id
 
   // Obtem valores da localStore
-  var storedResults = localStorage.getItem(cacheId + "_Results");
+  var storedResults = localStorage.getItem(this.cacheId + "_Results");
   if (storedResults != null && storedResults !== 'undefined') {
     this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
   }
   
   //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
-  let expirationTime = localStorage.getItem(cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
+  let expirationTime = localStorage.getItem(this.cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
   if ( now > expirationTime || expirationTime - now > this.validity*1000 || storedResults == null ) {
-    localStorage.setItem(cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
+    localStorage.setItem(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
     
     this._getNewResults().then( results => {
       if(JSON.stringify(this.results) != JSON.stringify(results)) {
@@ -56,7 +65,7 @@ DashInfo.prototype._updateResults = function () {
     .finally( () => {
       if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
         // TODO: test available space or clean
-        localStorage.setItem(cacheId + "_Results", JSON.stringify(this.results))
+        localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results))
       }
     })
   }
@@ -77,10 +86,8 @@ DashInfo.prototype.stopUpdates = function() {
 }
 
 DashInfo.prototype.forceRefresh = function() {
-  let cacheId = getUsername() + this.id
-  localStorage.setItem(cacheId + "_ExpirationTime", 0);
+  localStorage.setItem(this.cacheId + "_ExpirationTime", 0);
   this._updateResults();
-  this._cleanStore()  // aproveita para preemptivamente voltar a limpar todos os valores na cache expirados
 }
 
 DashInfo.prototype._cleanStore = function() {
