@@ -1,4 +1,4 @@
-import { rmDefinitionAdvSearch } from "@cob/rest-api-wrapper"
+import { rmDefinitionAggregation } from "@cob/rest-api-wrapper"
 
 const fieldSum = (defId, fieldName, query) => {
   let agg = {
@@ -9,7 +9,7 @@ const fieldSum = (defId, fieldName, query) => {
     }
   }
 
-  return rmDefinitionAdvSearch(defId, agg , query)
+  return rmDefinitionAggregation(defId, agg , query)
   .then(response => 
     ({
       value: response.aggregations["sum#x"].value,

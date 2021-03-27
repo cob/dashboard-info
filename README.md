@@ -21,11 +21,11 @@ In your project directory run:
 # Available functions
 
 The list of available functions are:
-* `DefinitionCount` - number of instances for a given query on a definition
-* `DomainCount` - number of instances for a given query on a domain
-* `Instances` - array of instances for a given query on a definition
-* `FieldSum` - sum of values of a field for a given query on definition
-* `FieldDistinctValues` - array of diferent values of a field for a given query on a definition
+* `definitionCount` - number of instances for a given query on a definition
+* `domainCount` - number of instances for a given query on a domain
+* `instancesList` - array of instances for a given query on a definition
+* `fieldSum` - sum of values of a field for a given query on definition
+* `fieldValues` - array of disctinct values of a field for a given query on a definition
 
 
 Auxiliary functions that allow you to specify the server and the credential. They should be used just once, in the beginnig of the aplication, and it's shared across all functions.

@@ -1,8 +1,8 @@
 /** @jest-environment node */
-import fieldDistinctValues from "../src/FieldDistinctValues.js"
+import fieldValues from "../src/FieldValues.js"
 
 test('for "Arab world" there are 4 indicators', () => {
-    fieldDistinctValues(2, "indicator_name.raw", 'Arab  World' )
+    fieldValues(2, "indicator_name.raw", 'Arab  World' )
     .then( results => {
         expect(results.value).toEqual([
             'Alternative and nuclear energy (% of total energy use)',

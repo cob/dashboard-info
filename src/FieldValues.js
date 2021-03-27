@@ -1,6 +1,6 @@
-import { rmDefinitionAdvSearch } from "@cob/rest-api-wrapper"
+import { rmDefinitionAggregation } from "@cob/rest-api-wrapper"
 
-const fieldDistinctValues = (defId, fieldName, query, size) => {
+const fieldValues = (defId, fieldName, query, size) => {
   let agg = {
     "x": {
       "terms": {
@@ -10,7 +10,7 @@ const fieldDistinctValues = (defId, fieldName, query, size) => {
     }
   }
 
-  return rmDefinitionAdvSearch(defId, agg , query, 0, size)
+  return rmDefinitionAggregation(defId, agg , query, 0, size)
   .then(response => 
     ({
       value: response.aggregations['sterms#x'].buckets.map(e => e.key),
@@ -20,4 +20,4 @@ const fieldDistinctValues = (defId, fieldName, query, size) => {
   .catch ( e => { throw(e) })
 }
 
-export default fieldDistinctValues
+export default fieldValues

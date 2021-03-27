@@ -1,5 +1,5 @@
 /** @jest-environment node */ //For auth
-import instances from "../src/Instances.js"
+import instancesList from "../src/InstancesList.js"
 import { auth, rmAddInstance, rmDeleteInstance } from "@cob/rest-api-wrapper"
 
 const sleep = (t) => new Promise (resolve => setTimeout(() => resolve(),t))
@@ -7,7 +7,7 @@ const sleep = (t) => new Promise (resolve => setTimeout(() => resolve(),t))
 test('if we add 3 instances that is what we should get',  async () => {
     var random = Math.floor(Math.random() * 1000)
     await auth("jestTests", "1jestTests2")
-    await instances("Test Person", "Instances_Test_"+random+"_*")
+    await instancesList("Test Person", "Instances_Test_"+random+"_*")
     .then( results => {
         expect(results.value).toEqual([])
     })
@@ -18,7 +18,7 @@ test('if we add 3 instances that is what we should get',  async () => {
     await rmAddInstance("Test Person", {"Name": "Instances_Test_"+random+"_3"}).then( result => p3 = result )
     await sleep(800) // Wait for ES indexing
 
-    await instances("Test Person", "Instances_Test_"+random+"*", 10)
+    await instancesList("Test Person", "Instances_Test_"+random+"*", 10)
     .then( results => {
         let values = results.value
         expect(values.length).toBe(3)

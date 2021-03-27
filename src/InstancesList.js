@@ -1,6 +1,6 @@
 import { rmDefinitionSearch } from "@cob/rest-api-wrapper"
 
-const instances = (def, query, size) => 
+const instancesList = (def, query, size) => 
   rmDefinitionSearch(def,query, 0, size)
   .then(response => 
     ({
@@ -10,4 +10,4 @@ const instances = (def, query, size) =>
   )
   .catch ( e => { throw(e) })
 
-export default instances
+export default instancesList
