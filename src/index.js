@@ -1,5 +1,4 @@
-import { auth, setServer } from "@cob/rest-api-wrapper"
-
+import { setServer, auth, umLoggedin } from "@cob/rest-api-wrapper"
 import DashInfo from "./DashInfo.js"
 
 import defCount from "./DefinitionCount.js"
@@ -16,4 +15,4 @@ const instancesList   = (definitionName,   query="*", size=10, options={}) => ne
 const fieldValues     = (defId, fieldName, query="*", size=10, options={}) => new DashInfo(options, fValues, defId, fieldName, query, size)
 
 
-export { definitionCount, instancesList, domainCount, fieldSum, fieldValues, auth, setServer }
+export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldValues, setServer, auth, umLoggedin }

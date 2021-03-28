@@ -14,13 +14,11 @@ function showCB(updateInfo) {
 }
 
 async function main() {
-    const dashInfo = await import("@cob/dashboard-info")
+    const {setServer, auth, definitionCount} = await import("@cob/dashboard-info")
 
-    dashInfo.setServer("https://learning.cultofbits.com")
-    await dashInfo.auth("jestTests", "1jestTests2")
-
-    let totalInfo = dashInfo.definitionCount("Test Person","*", {changeCB:showCB, validity:1})
-    showCB(totalInfo) // Show initial information
+    setServer("https://learning.cultofbits.com") 
+    await auth({ username:"jestTests", password:"1jestTests2" })
+    definitionCount("Test Person", "*", {changeCB:showCB, validity:1} )
 }
 
 main()

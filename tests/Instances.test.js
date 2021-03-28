@@ -6,7 +6,7 @@ const sleep = (t) => new Promise (resolve => setTimeout(() => resolve(),t))
 
 test('if we add 3 instances that is what we should get',  async () => {
     var random = Math.floor(Math.random() * 1000)
-    await auth("jestTests", "1jestTests2")
+    await auth({ username:"jestTests", password:"1jestTests2" })
     await instancesList("Test Person", "Instances_Test_"+random+"_*")
     .then( results => {
         expect(results.value).toEqual([])

@@ -18,7 +18,7 @@ const sleep = (t) => new Promise (resolve => setTimeout(() => resolve(),t))
 
 test('if we add another instance then there should be 1 more', async () => {
     let random = Math.floor(Math.random() * 1000)
-    await auth("jestTests", "1jestTests2")
+    await auth({ username:"jestTests", password:"1jestTests2" })
     await definitionCount("Test Person", "DefinitionCount Test_"+random)
     .then( results => {
         expect(results.value).toBe(0)
