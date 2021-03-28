@@ -2,60 +2,59 @@
 import DashInfo from "../src/DashInfo.js"
 import newCountCalls from "./CountCalls.js";
 import Storage from '../node_modules/dom-storage/lib/index.js'
+import { umLoggedin } from "@cob/rest-api-wrapper"
+
 import {jest} from '@jest/globals';
 
 
 localStorage = new Storage('./db.json', { strict: false, ws: '  ' });
 beforeAll( () => localStorage.clear() )
 
+function delay(t, v) {
+    return new Promise(function(resolve) { 
+        setTimeout(resolve.bind(null, v), t)
+    });
+ }
 
-test('every DashInfo value starts by having the last cached value', async () => {
-    jest.useFakeTimers('modern')
-    jest.setSystemTime(0)   
+
+test('every DashInfo value starts by having the last cached value',  async (done) => {
 
     //Setup cache with "42", the answer for everything
     localStorage.setItem("anonymous-_Results",JSON.stringify({value:42}));
 
-    let countInfo = new DashInfo( {validity:1}, () => new Promise( (resolve, reject) => reject("Fail on purpose!") ))
-    await Promise.resolve() //Allow other promises to resolve
-
-    await countInfo.startUpdates().catch ( () => {})
-    
-    expect(countInfo.value).toBe(42)
+    let zeroTest = new DashInfo( {validity:1}, () => delay(2000))
+    delay(1000).then (() => {
+        zeroTest.stopUpdates()
+        expect(zeroTest.value).toBe(42)
+        done()
+    })
 })
 
-test('DashInfo should only have a new value every *validity* seconds ',  async () => {
-    jest.useFakeTimers('modern')
-    jest.setSystemTime(0)   
+test('DashInfo should only have a new value every *validity* seconds ',  async (done) => {
+    let countInfo = new DashInfo( {validity:1}, newCountCalls(), 0)
     
-    let a = new DashInfo( {validity:1}, newCountCalls(), 0)
-    await Promise.resolve() //Allow other promises to resolve (loggedinuser)
-    expect(a.value).toBeUndefined()
-    
-    await Promise.resolve() //Allow other promises to resolve
-    expect(a.value).toBe(1)
-    
-    jest.setSystemTime(101)
-    jest.advanceTimersByTime(100)
-    await Promise.resolve() //Allow other promises to resolve
-    expect(a.value).toBe(1) // Shouldn't change
-    
-    jest.setSystemTime(801)
-    jest.advanceTimersByTime(700)
-    await Promise.resolve() //Allow other promises to resolve
-    expect(a.value).toBe(1) // Still shouldn't change
-    
-    
-    jest.setSystemTime(1101)
-    jest.advanceTimersByTime(300)
-    await Promise.resolve() //Allow other promises to resolve
-    await Promise.resolve() //Allow other promises to resolve
-    expect(a.value).toBe(2) // CHANGE TIME !
-    
-    jest.setSystemTime(1601)
-    jest.advanceTimersByTime(500)
-    await Promise.resolve() //Allow other promises to resolve
-    expect(a.value).toBe(2) // Shouldn't change
+    try {
+        expect(countInfo.value).toBeUndefined()
+        
+        await delay(500)
+        expect(countInfo.value).toBe(1)
+        
+        await delay(200)
+        expect(countInfo.value).toBe(1) // Shouldn't change
+        
+        await delay(200)
+        expect(countInfo.value).toBe(1) // Still shouldn't change
+        
+        await delay(500)
+        expect(countInfo.value).toBe(2) // CHANGE TIME !
+        
+        await delay(500)
+        expect(countInfo.value).toBe(2) // Shouldn't change
+        done()
+    }
+    finally {
+        countInfo.stopUpdates()
+    }
 })    
 
 test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds ', () => {

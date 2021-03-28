@@ -19,20 +19,20 @@ const DashInfo = function({validity=60, changeCB}, getterFunction, ...getterArgs
     "id":     { "get": () => [getterFunction.name,...this.getterArgs].join("_") },
     "cacheId":{ "get": () => this.username + '-' + this.id }
   })
-
-  this.startUpdates()
-
+  
   // Quando num browser, parar de fazer Updates quando se sai da página actual
   if(typeof window !== 'undefined') window.addEventListener('unload', () => this.stopUpdates() )
+
+  this.startUpdates()
 }
 
-DashInfo.prototype.startUpdates = function () {
-  clearTimeout(this.cycle)  //In case there's another update schedule to run clear it (case of forceUpdate or multiple startUpdates)
+DashInfo.prototype.startUpdates = function ({start=true}={}) {
+  if(this.stop && start) this.stop = false
   return umLoggedin().then( ({username}) => {
     // Obtem valores da localStore (de um último acesso ou outro tab do mesmo browser)
     this.username = username
     var storedResults = localStorage.getItem(this.cacheId + "_Results");
-    if (storedResults != null && storedResults !== 'undefined' && typeof this.results === "undefined") {
+    if (storedResults != null && storedResults !== 'undefined') {
       this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
       if(this.changeCB) this.changeCB(this.results)
     }
@@ -44,32 +44,32 @@ DashInfo.prototype.startUpdates = function () {
       localStorage.setItem(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
       
       return this._getNewResults()
-      .then( results => {
-        if(JSON.stringify(this.results) != JSON.stringify(results)) {
-          this.results = results
-          if(this.changeCB) this.changeCB(results)
-        } 
-        // Launch a new cycle (only if no error occurred)
-        this.cycle = setTimeout( () => this.startUpdates(), this.validity * 1000)
-      })
-      .catch( e => { throw(e) } )
-      .finally( () => {
-        if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
-          try {
-            localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results))
-          } catch (e) { // In case of error: warn, clean & retry
-            console.warn(e)
-            this._cleanStore() 
-            localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+        .then( results => {
+          if(JSON.stringify(this.results) != JSON.stringify(results)) {
+            this.results = results
+            if(this.changeCB) this.changeCB(results)
+          } 
+          // Launch a new cycle (only if no error occurred)
+          if(!this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+        })
+        .catch( e => Promise.reject(e) )
+        .finally( () => {
+          if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
+            try {
+              localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results))
+            } catch (e) { // In case of error: warn, clean & retry
+              console.warn(e)
+              this._cleanStore() 
+              localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+            }
           }
-        }
       })
     }
   })
 }
 
 DashInfo.prototype.stopUpdates = function() {
-  clearTimeout(this.cycle)
+  this.stop = true
 }
 
 DashInfo.prototype.forceUpdate = function() {
