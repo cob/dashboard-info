@@ -7,16 +7,17 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, { strict: true });
 }
 
-const DashInfo = function({validity=60, changeCB}, getterFunction, ...getterArgs) {
+const DashInfo = function({validity=60, changeCB}, getterFunction, getterArgs) {
   this.validity = validity
   this.changeCB = changeCB
-  this.getterArgs = getterArgs
-  this._getNewResults = () => getterFunction(...this.getterArgs)
+  this.getterArgs = getterArgs || {}
+  this.getterFunction = getterFunction
+  this._getNewResults = () => this.getterFunction(this.getterArgs)
   this.results = {value:undefined, href:undefined}
   Object.defineProperties(this, {
     "value":  { "get": () => this.results.value },
     "href":   { "get": () => this.results.href },
-    "id":     { "get": () => [getterFunction.name,...this.getterArgs].join("_") },
+    "id":     { "get": () => [getterFunction.name,...Object.values(this.getterArgs)].join("_") },
     "cacheId":{ "get": () => this.username + '-' + this.id }
   })
   
@@ -24,6 +25,12 @@ const DashInfo = function({validity=60, changeCB}, getterFunction, ...getterArgs
   if(typeof window !== 'undefined') window.addEventListener('unload', () => this.stopUpdates() )
 
   this.startUpdates()
+}
+
+DashInfo.prototype.changeArgs = function (newArgs) {
+  for(const key in newArgs) this.getterArgs[key] = newArgs[key]
+  this._getNewResults = () => this.getterFunction(this.getterArgs)
+  this.update({force:false})
 }
 
 DashInfo.prototype.startUpdates = function ({start=true}={}) {
@@ -72,8 +79,8 @@ DashInfo.prototype.stopUpdates = function() {
   this.stop = true
 }
 
-DashInfo.prototype.forceUpdate = function() {
-  localStorage.setItem(this.cacheId + "_ExpirationTime", 0)
+DashInfo.prototype.update = function({force=true}={}) {
+  if(force) localStorage.setItem(this.cacheId + "_ExpirationTime", 0)
   this.startUpdates()
 }
 

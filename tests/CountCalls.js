@@ -3,7 +3,7 @@ const newCountCalls = function (name) {
     // Para efeitos de teste devolve o número de calls a esta função da instância.
     var _callCount = 1
 
-    const countCalls = ( offset = 0) => new Promise( resolve => resolve( {
+    const countCalls = ( {offset = 0}={} ) => new Promise( resolve => resolve( {
         value: offset + _callCount,
         href: "https://" + (offset + _callCount++),
     }) ) 

@@ -1,6 +1,6 @@
 import { rmDomainSearch } from "@cob/rest-api-wrapper"
 
-const domainCount = (domainId, query) => 
+const domainCount = ({domainId, query}) => 
   rmDomainSearch(domainId, query)
   .then(response => 
     ({

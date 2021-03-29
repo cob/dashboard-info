@@ -1,6 +1,6 @@
 import { rmDefinitionAggregation } from "@cob/rest-api-wrapper"
 
-const fieldValues = (defId, fieldName, query, size=10) => {
+const fieldValues = ({defId, fieldName, query, size=10}) => {
   let agg = {
     "x": {
       "terms": {

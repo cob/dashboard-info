@@ -2,7 +2,6 @@
 import DashInfo from "../src/DashInfo.js"
 import newCountCalls from "./CountCalls.js";
 import Storage from '../node_modules/dom-storage/lib/index.js'
-import { umLoggedin } from "@cob/rest-api-wrapper"
 
 import {jest} from '@jest/globals';
 
@@ -31,7 +30,7 @@ test('every DashInfo value starts by having the last cached value',  async (done
 })
 
 test('DashInfo should only have a new value every *validity* seconds ',  async (done) => {
-    let countInfo = new DashInfo( {validity:1}, newCountCalls(), 0)
+    let countInfo = new DashInfo( {validity:1}, newCountCalls(), {offset:0})
     
     try {
         expect(countInfo.value).toBeUndefined()

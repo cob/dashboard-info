@@ -1,7 +1,7 @@
 import { rmDefinitionSearch } from "@cob/rest-api-wrapper"
 
-const instancesList = (def, query, size) => 
-  rmDefinitionSearch(def,query, 0, size)
+const instancesList = ({definitionName, query, size}) => 
+  rmDefinitionSearch(definitionName,query, 0, size)
   .then(response => 
     ({
       value: response.hits.hits.map(e => e._source),
