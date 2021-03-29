@@ -1,5 +1,5 @@
 import { umLoggedin } from "@cob/rest-api-wrapper"
-import Storage from '../node_modules/dom-storage/lib/index.js'
+import Storage from 'dom-storage'
 
 //Add suport for localstorage in node
 if (typeof window === 'undefined' && typeof global.localStorage === 'undefined') {
