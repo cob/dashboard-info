@@ -1,0 +1,12 @@
+<script>window.process = { env : { DEBUG: false } }</script>
+<script type="module" src="/recordm/localresource/js/cob/dashboard-info.js"></script>
+
+<div>
+    <h2> Test Persons: <span id="personsCount"></span> </h2>
+</div>
+
+<script >
+    const updateElement = (elemId) => (newInfo) => document.getElementById(elemId).innerHTML = newInfo.value
+
+    cobDashboardInfo.definitionCount("Test Person", "*", { changeCB: updateElement("personsCount") })
+</script>
