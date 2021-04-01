@@ -4,17 +4,21 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "./node_modules/.bin/webpack --config webpack.config.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@cob/rest-api-wrapper": "^2.1.1",
     "axios": "^0.21.1",
-    "dom-storage": "^2.1.0"
+    "dom-storage": "^2.1.0",
+    "util": "^0.12.3",
+    "webpack": "^5.28.0"
   },
   "devDependencies": {
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "webpack-cli": "^4.6.0"
   },
   "type": "module",
   "jest": {
