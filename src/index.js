@@ -14,15 +14,4 @@ const fieldSum        = (defId, fieldName, query="*",          options={}) => ne
 const instancesList   = (definitionName,   query="*", size=10, options={}) => new DashInfo(options, instList, {query:query, definitionName:definitionName,  size:size })
 const fieldValues     = (defId, fieldName, query="*", size=10, options={}) => new DashInfo(options, fValues,  {query:query, defId:defId, fieldName:fieldName, size:size })
 
-if(window) window.cobDashboardInfo = {
-    DashInfo: DashInfo,
-    definitionCount: definitionCount,
-    instancesList: instancesList,
-    domainCount: domainCount,
-    fieldSum: fieldSum,
-    fieldValues: fieldValues,
-    auth: auth,
-    umLoggedin: umLoggedin
-}
-
 export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldValues, setServer, auth, umLoggedin }
