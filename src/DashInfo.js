@@ -81,7 +81,6 @@ DashInfo.prototype.update = function({force=true}={}) {
 DashInfo.prototype._saveInLocalStorage = function(key,value) {
   try {
     localStorage.setItem(key, value) 
-    console.log("ok")
   } catch {
     this._cleanStore() 
     try {
@@ -92,7 +91,7 @@ DashInfo.prototype._saveInLocalStorage = function(key,value) {
       // If it was not, them clear all cache and tr
       localStorage.clear()
       localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
-      console.warn("CoB localStorage cleaned")
+      console.warn("CoB localStorage full: cleaned")
     }
 }
 }
