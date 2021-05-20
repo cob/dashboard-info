@@ -48,7 +48,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
     let now = Date.now();
     let expirationTime = localStorage.getItem(this.cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
     if ( now > expirationTime || expirationTime - now > this.validity*1000 || storedResults == null ) {
-      localStorage.setItem(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
+      this._saveInLocalStorage(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
       
       return this._getNewResults()
         .then( results => {
@@ -62,13 +62,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
         .catch( e => Promise.reject(e) )
         .finally( () => {
           if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
-            try {
-              localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results))
-            } catch (e) { // In case of error: warn, clean & retry
-              console.warn(e)
-              this._cleanStore() 
-              localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
-            }
+            this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
           }
       })
     }
@@ -82,6 +76,25 @@ DashInfo.prototype.stopUpdates = function() {
 DashInfo.prototype.update = function({force=true}={}) {
   if(force) localStorage.setItem(this.cacheId + "_ExpirationTime", 0)
   this.startUpdates()
+}
+
+DashInfo.prototype._saveInLocalStorage = function(key,value) {
+  try {
+    localStorage.setItem(key, value) 
+    console.log("ok")
+  } catch {
+    this._cleanStore() 
+    try {
+      // Try again, to see if removing expired entries was enougth 
+      localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+    }
+    catch (e) {
+      // If it was not, them clear all cache and tr
+      localStorage.clear()
+      localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+      console.warn("CoB localStorage cleaned")
+    }
+}
 }
 
 DashInfo.prototype._cleanStore = function() {
