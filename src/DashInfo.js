@@ -7,7 +7,7 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, { strict: true });
 }
 
-const DashInfo = function({validity=60, changeCB}, getterFunction, getterArgs) {
+const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
   this.validity = validity
   this.changeCB = changeCB
   this.getterArgs = getterArgs || {}
@@ -56,8 +56,8 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
             this.results = results
             if(this.changeCB) this.changeCB(results)
           } 
-          // Launch a new cycle (only if no error occurred)
-          if(!this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+          // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred)
+          if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
         })
         .catch( e => Promise.reject(e) )
         .finally( () => {
@@ -91,8 +91,6 @@ DashInfo.prototype._saveInLocalStorage = function(key,value) {
       // If it was not, them clear all cache and try again
       localStorage.clear()
       try {
-        localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
-      localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
         localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
         console.warn("CoB localStorage full: cleaned")
       } catch (e) {
