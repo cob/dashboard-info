@@ -82,18 +82,25 @@ DashInfo.prototype._saveInLocalStorage = function(key,value) {
   try {
     localStorage.setItem(key, value) 
   } catch {
+    // Clean expired information
     this._cleanStore() 
     try {
       // Try again, to see if removing expired entries was enougth 
       localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
-    }
-    catch (e) {
-      // If it was not, them clear all cache and tr
+    } catch (e) {
+      // If it was not, them clear all cache and try again
       localStorage.clear()
+      try {
+        localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
       localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
-      console.warn("CoB localStorage full: cleaned")
+        localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+        console.warn("CoB localStorage full: cleaned")
+      } catch (e) {
+        // If, even with all storage available, we have an error log it 
+        console.error("CoB localStorage not enought")
+      } 
     }
-}
+  }
 }
 
 DashInfo.prototype._cleanStore = function() {
