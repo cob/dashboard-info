@@ -29,7 +29,7 @@ const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
   })
   
   // Quando num browser, parar de fazer Updates quando se sai da página actual
-  if(typeof window !== 'undefined') window.addEventListener('unload', () => this.stopUpdates() )
+  if(typeof window !== 'undefined') window.addEventListener('beforeunload', () => this.stopUpdates() )
 
   this.startUpdates()
 }
@@ -97,12 +97,12 @@ DashInfo.prototype._saveInLocalStorage = function(key,value) {
     this._cleanStore() 
     try {
       // Try again, to see if removing expired entries was enougth 
-      localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+      localStorage.setItem(key, value) 
     } catch (e) {
       // If it was not, them clear all cache and try again
       localStorage.clear()
       try {
-        localStorage.setItem(this.cacheId + "_Results", JSON.stringify(this.results)) 
+        localStorage.setItem(key, value) 
         console.warn("CoB localStorage full: cleaned")
       } catch (e) {
         // If, even with all storage available, we have an error log it 
