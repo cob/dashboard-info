@@ -7,15 +7,22 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, { strict: true });
 }
 
+const Loading = "loading"
+const Cache   = "cache"
+const Ready   = "ready"
+const Error   = "error"
+
 const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
   this.validity = validity
   this.changeCB = changeCB
+  this.currentState = Loading
   this.getterArgs = getterArgs || {}
   this.getterFunction = getterFunction
   this._getNewResults = () => this.getterFunction(this.getterArgs)
-  this.results = {value:undefined, href:undefined}
+  this.results = {value:undefined, href:undefined, state: Loading}
   Object.defineProperties(this, {
     "value":  { "get": () => this.results.value },
+    "state":  { "get": () => this.currentState },
     "href":   { "get": () => this.results.href },
     "id":     { "get": () => [getterFunction.name,...Object.values(this.getterArgs)].join("_") },
     "cacheId":{ "get": () => this.username + '-' + this.id }
@@ -41,6 +48,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
     var storedResults = localStorage.getItem(this.cacheId + "_Results");
     if (storedResults != null && storedResults !== 'undefined') {
       this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
+      this.currentState = Cache
       if(this.changeCB) this.changeCB(this.results)
     }
     
@@ -54,12 +62,15 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
         .then( results => {
           if(JSON.stringify(this.results) != JSON.stringify(results)) {
             this.results = results
+            this.currentState = Ready
             if(this.changeCB) this.changeCB(results)
           } 
           // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred)
           if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
         })
-        .catch( e => Promise.reject(e) )
+        .catch( e => {
+          this.currentState = Error
+        })
         .finally( () => {
           if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
             this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
