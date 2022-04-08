@@ -7,10 +7,12 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, { strict: true });
 }
 
-const Loading = "loading"
-const Cache   = "cache"
-const Ready   = "ready"
-const Error   = "error"
+const Loading  = "loading"
+const Cache    = "cache"
+const Updating = "updating"
+const ReadyNew = "ready"
+const ReadyOld = "cache"
+const Error    = "error"
 
 const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
   this.validity = validity
@@ -57,24 +59,27 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
     let expirationTime = localStorage.getItem(this.cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
     if ( now > expirationTime || expirationTime - now > this.validity*1000 || storedResults == null ) {
       this._saveInLocalStorage(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
-      
+  
+      if(this.currentState != Loading) this.currentState = Updating
       return this._getNewResults()
-        .then( results => {
-          if(JSON.stringify(this.results) != JSON.stringify(results)) {
-            this.results = results
-            this.currentState = Ready
-            if(this.changeCB) this.changeCB(results)
-          } 
-          // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred)
-          if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
-        })
-        .catch( e => {
-          this.currentState = Error
-        })
-        .finally( () => {
-          if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
-            this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
-          }
+      .then( results => {
+        if(JSON.stringify(this.results) != JSON.stringify(results)) {
+          this.currentState = ReadyNew
+          this.results = results
+          if(this.changeCB) this.changeCB(results)
+        } else {
+          this.currentState = ReadyOld
+        } 
+        // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred)
+        if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+      })
+      .catch( e => {
+        this.currentState = Error
+      })
+      .finally( () => {
+        if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
+          this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
+        }
       })
     }
   })
