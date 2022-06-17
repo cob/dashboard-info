@@ -13,7 +13,7 @@ const definitionCount = (definitionName,   query="*",          options={}) => ne
 const domainCount     = (domainId,         query="*",          options={}) => new DashInfo(options, domCount, {query:query, domainId:domainId })
 const fieldSum        = (defId, fieldName, query="*",          options={}) => new DashInfo(options, fSum,     {query:query, defId:defId, fieldName:fieldName })
 const fieldAverage    = (defId, fieldName, query="*",          options={}) => new DashInfo(options, fAverage, {query:query, defId:defId, fieldName:fieldName })
-const instancesList   = (definitionName,   query="*", size=10, options={}) => new DashInfo(options, instList, {query:query, definitionName:definitionName,  size:size })
+const instancesList   = (definitionName,   query="*", size=10, start=0, options={}) => new DashInfo(options, instList, {query:query, definitionName:definitionName, size:size, start:start })
 const fieldValues     = (defId, fieldName, query="*", size=10, options={}) => new DashInfo(options, fValues,  {query:query, defId:defId, fieldName:fieldName, size:size })
 
-export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldValues, setServer, auth, umLoggedin }
+export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldAverage, fieldValues, setServer, auth, umLoggedin }
