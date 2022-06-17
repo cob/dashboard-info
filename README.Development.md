@@ -12,6 +12,10 @@ You can check the status of the existing tests by running:
 ```
 npm run test
 ```
+or
+```
+npm run test <TestFileName>
+```
 
 However these test are supposed to be running continuously throughout the development process. 
 For this first make sure you have jest cli installed:
