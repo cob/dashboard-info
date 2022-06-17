@@ -82,6 +82,9 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
           this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
         }
       })
+    } else {
+      // Value from cache but launch a new cycle also - if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred) 
+      if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
     }
   })
 }
