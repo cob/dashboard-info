@@ -75,6 +75,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
       })
       .catch( e => {
         this.currentState = Error
+        this.errorCode = e.response && e.response.status
       })
       .finally( () => {
         if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
