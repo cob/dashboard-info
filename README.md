@@ -27,6 +27,7 @@ The list of available functions are:
 * `instancesList` - array of instances for a given query on a definition
 * `fieldSum` - sum of values of a field for a given query on definition
 * `fieldAverage` - average of values of a field for a given query on definition
+* `fieldWeightedAverage` - weighted average of values of a field, weighted by the values of another field, for a given query on definition
 * `fieldValues` - array of disctinct values of a field for a given query on a definition
 
 
