@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "node --experimental-vm-modules node_modules/.bin/jest —-watch -o",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles --runInBand",
     "build": "npm run test && ./node_modules/.bin/webpack --config webpack.config.js",
     "lint": "eslint . --ext .js,.ts --fix --ignore-path .gitignore"
   },
@@ -28,9 +28,11 @@
   },
   "type": "module",
   "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
     "moduleNameMapper": {
       "^src(.*)$": "<rootDir>/src$1",
-      "^tests(.*)$": "<rootDir>/tests$1"
+      "^tests(.*)$": "<rootDir>/tests$1",
+      "^node_modules(.*)$": "<rootDir>/node_modules$1"
     },
     "roots": [
       "src/",

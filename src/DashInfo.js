@@ -57,7 +57,7 @@ class DashInfo {
     }
 
     set state(newState) {
-        if (newState !== this._currentState) {
+        if (newState !== this.state) {
             this._currentState = newState
             this._results.state = newState
             if (this.onStateChange) this.onStateChange(newState)
@@ -122,7 +122,7 @@ class DashInfo {
 
             // Do this immediately to avoid to minimum collision situations
             this._saveInLocalStorage(this.cacheId + "_ExpirationTime", now + this.validity * 1000);
-            if (this._currentState !== Loading) this.state = Updating
+            if (this.state !== Loading) this.state = Updating
 
             try {
                 const newResults = await this._getNewResults()
