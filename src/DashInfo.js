@@ -17,15 +17,17 @@ const Error = "error"
 
 class DashInfo {
 
-    constructor({validity = 0, changeCB}, getterFunction, getterArgs) {
+    constructor({validity = 0, changeCB, onStateChange}, getterFunction, getterArgs) {
         this.validity = validity
         this.changeCB = changeCB
+        this.onStateChange = onStateChange
         this.getterArgs = getterArgs || {}
         this.getterFunction = getterFunction
 
-        this._username = null
-        this._currentState = Loading
         this._results = {value: undefined, href: undefined, state: Loading}
+        this.state = Loading
+
+        this._username = null
         this._getNewResults = async () => this.getterFunction(this.getterArgs)
         this._stop = false
 
@@ -54,6 +56,14 @@ class DashInfo {
         return this._results.href
     }
 
+    set state(newState) {
+        if (newState !== this._currentState) {
+            this._currentState = newState
+            this._results.state = newState
+            if (this.onStateChange) this.onStateChange(newState)
+        }
+    }
+
     get state() {
         return this._currentState
     }
@@ -69,12 +79,13 @@ class DashInfo {
     }
 
     update({force = true} = {}) {
-        if (force) localStorage.setItem(this.cacheId + "_ExpirationTime", 0)
+        if (force) localStorage.setItem(this.cacheId + "_ExpirationTime", "0")
         this.startUpdates()
     }
 
     startUpdates() {
         if (this._stop) this._stop = false
+        // noinspection JSIgnoredPromiseFromCall
         this._loadValues()
     }
 
@@ -94,52 +105,60 @@ class DashInfo {
         if (storedResults != null && storedResults !== 'undefined') {
             // Start by loading the existing values from the local storage
             this._results = JSON.parse(storedResults)
-            this._currentState = Cache
-            if (this.changeCB) this.changeCB(this.results)
+            this.state = Cache
+            if (this.changeCB) this.changeCB(this._results)
         }
     }
 
     async _loadValues() {
+        if (this._stop) return
+
         // Some other DashInfo may have updated the local storage for the same query. We need to pull the information
         await this._loadCachedValues()
 
-        let now = Date.now();
+        const now = Date.now();
         const expirationTime = parseInt(localStorage.getItem(this.cacheId + "_ExpirationTime") || 0, 10);
         if (now > expirationTime || expirationTime - now > this.validity * 1000 || !this._results) {
 
             // Do this immediately to avoid to minimum collision situations
             this._saveInLocalStorage(this.cacheId + "_ExpirationTime", now + this.validity * 1000);
-
-            if (this.currentState !== Loading) this.currentState = Updating
+            if (this._currentState !== Loading) this.state = Updating
 
             try {
                 const newResults = await this._getNewResults()
-
                 if (JSON.stringify(this._results) !== JSON.stringify(newResults)) {
-                    this.currentState = ReadyNew
-                    this._results = JSON.parse(newResults)
+                    this.state = ReadyNew
+                    this._results = newResults
                     if (this.changeCB) this.changeCB(newResults)
 
                 } else {
-                    this.currentState = ReadyOld
+                    //this._currentState = ReadyOld
+                    this.state = ReadyOld
                 }
 
                 // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if unload occurred)
-                if (this.validity && !this.stop) sleep(this.validity * 1000).then(this._loadValues)
+                if (this.validity && !this._stop) {
+                    await sleep(this.validity * 1000)
+                    // noinspection ES6MissingAwait
+                    this._loadValues()
+                }
 
             } catch (e) {
-                this.currentState = Error
+                this.state = Error
 
             } finally {
-                if (typeof this._results !== 'undefined' && typeof this.results !== 'function') {
+                if (typeof this._results !== 'undefined' && typeof this._results !== 'function') {
                     this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this._results))
                 }
             }
 
-
         } else {
             // Value from cache but launch a new cycle also - if validity and this.stop is not true (either by explicitly being set or if unload occurred)
-            if (this.validity && !this._stop) sleep(this.validity * 1000).then(this._loadValues)
+            if (this.validity && !this._stop) {
+                await sleep(this.validity * 1000)
+                // noinspection ES6MissingAwait
+                this._loadValues()
+            }
         }
 
     }

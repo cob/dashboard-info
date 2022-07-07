@@ -1,70 +1,76 @@
 /** @jest-environment node */
 import DashInfo from "src/DashInfo.js"
-import sleep from "src/utils/Sleep.js";
-import retry from "tests/utils/Retry.js";
+import repeat from "tests/utils/Repeat.js";
 import newCountCalls from "tests/utils/NewCountCalls.js";
 import Storage from '../node_modules/dom-storage/lib/index.js'
+import sleep from "../src/utils/Sleep.js";
 
 // eslint-disable-next-line no-global-assign
 localStorage = new Storage('./db.json', {strict: false, ws: '  '});
 
 beforeEach(() => localStorage.clear())
 
-test('every DashInfo value starts by having the last cached value', (done) => {
+test('every DashInfo value starts by having the last cached value', async () => {
 
     //Setup cache with "42", the answer for everything :)
     localStorage.setItem("anonymous-_Results", JSON.stringify({value: 42}));
 
+    let previousState
+    let loadedInitialValues = false
+
     const dashInfo = new DashInfo(
-        {validity: 5},
+        {
+            validity: 5,
+            onStateChange: function(newState) {
+                if (!loadedInitialValues) {
+                    loadedInitialValues = (previousState === 'loading' && newState === 'cache' && this.value === 42)
+                }
+                previousState = newState
+            }
+        },
         () => {},
         null)
 
-    let previousState
+    await sleep(1000)
+    dashInfo.stopUpdates()
 
-    retry(1000, 1, () => {
-        try {
-            expect(previousState).toBe('loading')
-            expect(dashInfo.state).toBe('cache')
-            expect(dashInfo.value).toBe(42)
-            return true
-        } catch (e) {
-            previousState = dashInfo.state
-            return false
-        }
-    }, done)
+    expect(loadedInitialValues).toStrictEqual(true)
 })
 
-test.skip('DashInfo should only have a new value every *validity* seconds ', async () => {
+test('DashInfo should only have a new value every *validity* seconds', async () => {
     const countInfo = new DashInfo(
         {validity: 1},
         newCountCalls(),
         {offset: 0})
 
-    try {
-        expect(countInfo.value).toBeUndefined()
+    let previousValue = null
+    let collectedValues = []
 
-        await sleep(500)
-        expect(countInfo.value).toBe(1)
+    // Collect all valus changes during this period
+    await repeat(30, 100, () => {
+        if (previousValue !== countInfo.value) {
+            collectedValues.push({timestamp: Date.now(), value: countInfo.value})
+            previousValue = countInfo.value
+        }
+    })
 
-        await sleep(200)
-        expect(countInfo.value).toBe(1) // Shouldn't change
+    countInfo.stopUpdates()
 
-        await sleep(200)
-        expect(countInfo.value).toBe(1) // Still shouldn't change
+    expect(collectedValues.length).toBeGreaterThanOrEqual(3)
 
-        await sleep(500)
-        expect(countInfo.value).toBe(2) // CHANGE TIME !
+    collectedValues = collectedValues.slice(0, 3)
 
-        await sleep(500)
-        expect(countInfo.value).toBe(2) // Shouldn't change
+    let keysReduceObj = collectedValues.reduce((pv, cv) => {
+        pv[cv.timestamp] = cv.value;
+        return pv
+    }, {});
+    expect(Object.keys(keysReduceObj)).toHaveLength(3)
 
-    } finally {
-        countInfo.stopUpdates()
-    }
+    expect([...new Set(collectedValues.map(v => v.value))]).toHaveLength(3)
+    expect([...new Set(collectedValues.map(v => v.value))]).toStrictEqual([undefined, 1, 2])
 })
 
-test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds ', () => {
+test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds', () => {
     //TODO
 })
 

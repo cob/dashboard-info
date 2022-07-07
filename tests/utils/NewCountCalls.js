@@ -3,8 +3,8 @@ export default function newCountCalls() {
     // Para efeitos de teste devolve o número de calls a esta função da instância.
     let _callCount = 1
 
-    return ({offset = 0} = {}) => new Promise(resolve => resolve({
+    return ({offset = 0} = {}) => Promise.resolve({
         value: offset + _callCount,
         href: "https://" + (offset + _callCount++),
-    }))
+    })
 }

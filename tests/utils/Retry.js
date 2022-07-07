@@ -1,14 +1,17 @@
-export default function retry(retries, sleepBetweenRetries, evalFn, onSuccess) {
-    const result = evalFn()
+import sleep from "src/utils/Sleep.js"
 
-    if (result) {
-        onSuccess()
-        return;
+export default async function retry(retries, sleepBetweenRetries, evalFn) {
+    for (let i = 0; i < retries; i++) {
+
+        const result = evalFn()
+
+        if (result) {
+            return Promise.resolve(true);
+        }
+
+        await sleep(sleepBetweenRetries)
     }
 
-    if (retries === 0) return
+    return Promise.resolve(false);
 
-    setTimeout(
-        () => retry(--retries, sleepBetweenRetries, evalFn, onSuccess),
-        sleepBetweenRetries)
 }
