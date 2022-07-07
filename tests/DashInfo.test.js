@@ -1,66 +1,70 @@
 /** @jest-environment node */
-import DashInfo from "../src/DashInfo.js"
-import newCountCalls from "./CountCalls.js";
+import DashInfo from "src/DashInfo.js"
+import sleep from "src/utils/Sleep.js";
+import retry from "tests/utils/Retry.js";
+import newCountCalls from "tests/utils/NewCountCalls.js";
 import Storage from '../node_modules/dom-storage/lib/index.js'
 
-import {jest} from '@jest/globals';
+// eslint-disable-next-line no-global-assign
+localStorage = new Storage('./db.json', {strict: false, ws: '  '});
 
+beforeEach(() => localStorage.clear())
 
-localStorage = new Storage('./db.json', { strict: false, ws: '  ' });
-beforeAll( () => localStorage.clear() )
+test('every DashInfo value starts by having the last cached value', (done) => {
 
-function delay(t, v) {
-    return new Promise(function(resolve) { 
-        setTimeout(resolve.bind(null, v), t)
-    });
- }
+    //Setup cache with "42", the answer for everything :)
+    localStorage.setItem("anonymous-_Results", JSON.stringify({value: 42}));
 
+    const dashInfo = new DashInfo(
+        {validity: 5},
+        () => {},
+        null)
 
-test('every DashInfo value starts by having the last cached value',  async (done) => {
+    let previousState
 
-    //Setup cache with "42", the answer for everything
-    localStorage.setItem("anonymous-_Results",JSON.stringify({value:42}));
-
-    let zeroTest = new DashInfo( {validity:1}, () => delay(2000))
-    delay(1000).then (() => {
-        zeroTest.stopUpdates()
-        expect(zeroTest.value).toBe(42)
-        done()
-    })
+    retry(1000, 1, () => {
+        try {
+            expect(previousState).toBe('loading')
+            expect(dashInfo.state).toBe('cache')
+            expect(dashInfo.value).toBe(42)
+            return true
+        } catch (e) {
+            previousState = dashInfo.state
+            return false
+        }
+    }, done)
 })
 
-test('DashInfo should only have a new value every *validity* seconds ',  async (done) => {
-    let countInfo = new DashInfo( {validity:1}, newCountCalls(), {offset:0})
-    
+test.skip('DashInfo should only have a new value every *validity* seconds ', async () => {
+    const countInfo = new DashInfo(
+        {validity: 1},
+        newCountCalls(),
+        {offset: 0})
+
     try {
         expect(countInfo.value).toBeUndefined()
-        
-        await delay(500)
+
+        await sleep(500)
         expect(countInfo.value).toBe(1)
-        
-        await delay(200)
+
+        await sleep(200)
         expect(countInfo.value).toBe(1) // Shouldn't change
-        
-        await delay(200)
+
+        await sleep(200)
         expect(countInfo.value).toBe(1) // Still shouldn't change
-        
-        await delay(500)
+
+        await sleep(500)
         expect(countInfo.value).toBe(2) // CHANGE TIME !
-        
-        await delay(500)
+
+        await sleep(500)
         expect(countInfo.value).toBe(2) // Shouldn't change
-        done()
-    }
-    finally {
+
+    } finally {
         countInfo.stopUpdates()
     }
-})    
-
-test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds ', () => {
-    //TODO
 })
 
-test('expired cache is cleaned every new DashInfo', () => {
+test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds ', () => {
     //TODO
 })
 
@@ -68,7 +72,7 @@ test('if no cache available (no mem or no localstorage) it work without cache', 
     //TODO
 })
 
-test('old values are cleanned by _cleancache', () => {
+test('if no cache available (no mem or no localstorage) tries to clear up some memory', () => {
     //TODO
 })
 
@@ -76,7 +80,7 @@ test('changing querys for "countries series" from "Arab world" to "united" shoul
 // TODO
 //     const mockUpdateCb = jest.fn()
 //     dc = new DefinitionCount("Countries Series", mockUpdateCb, 1, "Arab world", "c2" )
-    
+
 //     return sleep(500).then( () => {
 //         expect(dc.resultsUrl).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab world")
 //         expect(dc.getValue()).toBe(20)

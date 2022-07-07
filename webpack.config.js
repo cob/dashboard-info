@@ -1,6 +1,10 @@
 export default {
    entry: './src/index.js',
    resolve: {
+      alias: {
+         src: path.resolve(__dirname, 'src'),
+         test: path.resolve(__dirname, 'tests'),
+      },
       fallback: { 
          "url": false,
          "util": false,

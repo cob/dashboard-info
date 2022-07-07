@@ -4,8 +4,10 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": " node --experimental-vm-modules node_modules/.bin/jest",
-    "build": "./node_modules/.bin/webpack --config webpack.config.js"
+    "dev": "node --experimental-vm-modules node_modules/.bin/jest —-watch -o",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "build": "npm run test && ./node_modules/.bin/webpack --config webpack.config.js",
+    "lint": "eslint . --ext .js,.ts --fix --ignore-path .gitignore"
   },
   "author": "",
   "license": "ISC",
@@ -15,12 +17,21 @@
     "dom-storage": "^2.1.0"
   },
   "devDependencies": {
+    "@rushstack/eslint-patch": "^1.1.0",
+    "eslint": "^8.5.0",
+    "eslint-plugin-jest": "^26.5.3",
     "jest": "^26.6.3",
+    "prettier": "^2.5.1",
+    "watch": "^1.0.2",
     "webpack": "^5.28.0",
     "webpack-cli": "^4.6.0"
   },
   "type": "module",
   "jest": {
+    "moduleNameMapper": {
+      "^src(.*)$": "<rootDir>/src$1",
+      "^tests(.*)$": "<rootDir>/tests$1"
+    },
     "roots": [
       "src/",
       "tests/"

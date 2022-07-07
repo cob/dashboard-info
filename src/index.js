@@ -1,14 +1,14 @@
 import { setServer, auth, umLoggedin } from "@cob/rest-api-wrapper"
-import DashInfo from "./DashInfo.js"
+import DashInfo from "src/DashInfo.js"
 
-import defCount from "./DefinitionCount.js"
-import instList from "./InstancesList.js"
-import domCount from "./DomainCount.js"
-import fSum     from "./FieldSum.js"
-import fAverage from "./FieldAverage.js"
-import fWeightedAverage from "./FieldWeightedAverage.js"
-import fValues  from "./FieldValues.js"
-import dmEquipCount  from "./DmEquipmentCount.js"
+import defCount from "src/lib/DefinitionCount.js"
+import instList from "src/lib/InstancesList.js"
+import domCount from "src/lib/DomainCount.js"
+import fSum     from "src/lib/FieldSum.js"
+import fAverage from "src/lib/FieldAverage.js"
+import fWeightedAverage from "src/lib/FieldWeightedAverage.js"
+import fValues  from "src/lib/FieldValues.js"
+import dmEquipCount  from "src/lib/DmEquipmentCount.js"
 
 
 const definitionCount = (definitionName,   query="*",          options={}) => new DashInfo(options, defCount, {query:query, definitionName:definitionName })
