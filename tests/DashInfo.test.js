@@ -77,7 +77,7 @@ test('DashInfo should only have a new value every *validity* seconds', async () 
     expect([...new Set(collectedValues.map(v => v.value))]).toStrictEqual([undefined, 1, 2])
 })
 
-test('TWO objects for the same info should only call ONE _getNewValue() every *validity* seconds', async () => {
+test('Two objects for the same info should only call ONE _getNewValue() every *validity* seconds', async () => {
 
     const statesA = []
     const statesB = []
@@ -98,16 +98,17 @@ test('TWO objects for the same info should only call ONE _getNewValue() every *v
     dashInfo_B.stopUpdates()
 
     expect(dashInfo_A.value).toStrictEqual(dashInfo_B.value)
+    
+    const containsUpdatingState_A = statesA.filter(state => state === 'updating').length
+    const containsUpdatingState_B = statesB.filter(state => state === 'updating').length
+    
+    if (containsUpdatingState_A) {
+        expect(containsUpdatingState_B).toStrictEqual(0)
 
-    expect(statesA.filter(state => state === 'updating').length).toBeGreaterThanOrEqual(1)
-    expect(statesB.filter(state => state === 'updating')).toHaveLength(0)
+    } else {
+        expect(containsUpdatingState_A).toStrictEqual(0)
+    }
 })
-
-test('if no cache available (no mem or no localstorage) it work without cache', () => {
-    // eslint-disable-next-line no-global-assign
-    localStorage = null
-})
-
 
 test('if no cache available (ocalstorage quota exceeded) tries to clear up some memory', async () => {
 
