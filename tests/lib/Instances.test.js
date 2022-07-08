@@ -1,7 +1,6 @@
 /** @jest-environment node */                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                //For auth
 import instancesList from "src/lib/InstancesList.js"
 import {auth, rmAddInstance, rmDeleteInstance} from "@cob/rest-api-wrapper"
-import sleep from "src/utils/Sleep.js"
 import retry from "tests/utils/Retry.js"
 
 test('if we add 3 instances that is what we should get', async () => {

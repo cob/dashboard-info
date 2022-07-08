@@ -1,3 +1,9 @@
+import  path, {dirname} from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export default {
    entry: './src/index.js',
    resolve: {
@@ -13,6 +19,7 @@ export default {
    },
    mode: "production",
    output: {
+      globalObject: 'this',
       library: {
             name: "cobDashboardInfo",
             type: 'umd'

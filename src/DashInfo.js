@@ -8,6 +8,8 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, {strict: true});
 }
 
+console.log("TESTE")
+
 const Loading = "loading"
 const Cache = "cache"
 const Updating = "updating"

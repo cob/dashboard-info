@@ -16,12 +16,17 @@ Each function takes care of caching, pooling and syncronizing diferent agents fo
 In your project directory run:
 
 ```
- npm i @cob/dashboard-info
+ npm install --save @cob/dashboard-info
+ 
+ or 
+ 
+ yarn add @cob/dashboard-info
 ````
 
 # Available functions
 
 The list of available functions are:
+* `dmEquipmentCount` - number of equipments
 * `definitionCount` - number of instances for a given query on a definition
 * `domainCount` - number of instances for a given query on a domain
 * `instancesList` - array of instances for a given query on a definition
@@ -34,8 +39,8 @@ The list of available functions are:
 Auxiliary functions that allow you to specify the server and the credential. They should be used just once, in the beginnig of the aplication, and it's shared across all functions.
 * `setServer` - set the server to use
 * `auth` - authenticate a user
-> NOTE: you only need to use these functions if your application is not integrated in a cob dashboard, like a node script.
 
+> NOTE: you only need to use these functions if your application is not integrated in a cob dashboard, like a node script.
 
 
 # Examples
