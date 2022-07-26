@@ -21,6 +21,7 @@ const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
   this.getterArgs = getterArgs || {}
   this.getterFunction = getterFunction
   this._getNewResults = () => this.getterFunction(this.getterArgs)
+  this._timeoutProcess = null
   this.results = {value:undefined, href:undefined, state: Loading}
   Object.defineProperties(this, {
     "value":  { "get": () => this.results.value },
@@ -71,7 +72,10 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
           this.currentState = ReadyOld
         } 
         // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred)
-        if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+        if(this.validity && !this.stop) {
+          if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
+          this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+        }
       })
       .catch( e => {
         this.currentState = Error
@@ -84,7 +88,10 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
       })
     } else {
       // Value from cache but launch a new cycle also - if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred) 
-      if(this.validity && !this.stop) setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+      if(this.validity && !this.stop) {
+        if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
+        this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
+      }
     }
   })
 }
