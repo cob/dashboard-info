@@ -8,8 +8,6 @@ if (typeof window === 'undefined' && typeof global.localStorage === 'undefined')
     global.sessionStorage = new Storage(null, {strict: true});
 }
 
-console.log("TESTE")
-
 const Loading = "loading"
 const Cache = "cache"
 const Updating = "updating"
@@ -26,8 +24,8 @@ class DashInfo {
         this.getterArgs = getterArgs || {}
         this.getterFunction = getterFunction
 
-        this._results = {value: undefined, href: undefined, state: Loading}
         this.state = Loading
+        this._results = {value: undefined, href: undefined, state: Loading}
 
         this._username = null
         this._getNewResults = async () => this.getterFunction(this.getterArgs)
@@ -42,8 +40,9 @@ class DashInfo {
         // eslint-disable-next-line no-unexpected-multiline
         (async () => {
             await this._loadCachedValues()
+            // trigger the start update and let it run
             this.startUpdates()
-        })();
+        })()
     }
 
     get id() {
@@ -61,7 +60,7 @@ class DashInfo {
     set state(newState) {
         if (newState !== this.state) {
             this._currentState = newState
-            this._results.state = newState
+            this.state = newState
             if (this.onStateChange) this.onStateChange(newState)
         }
     }
@@ -77,18 +76,23 @@ class DashInfo {
     changeArgs(newArgs) {
         for (const key in newArgs) this.getterArgs[key] = newArgs[key]
         this._getNewResults = () => this.getterFunction(this.getterArgs)
+
+        // noinspection JSIgnoredPromiseFromCall
         this.update({force: false})
     }
 
-    update({force = true} = {}) {
+    async update({force = true} = {}) {
         if (force) localStorage.setItem(this.cacheId + "_ExpirationTime", "0")
-        this.startUpdates()
+        await this._loadValues()
     }
 
-    startUpdates() {
+    async startUpdates() {
         if (this._stop) this._stop = false
-        // noinspection JSIgnoredPromiseFromCall
-        this._loadValues()
+
+        while (this.validity && !this._stop) {
+            await this._loadValues()
+            await sleep(this.validity * 1000)
+        }
     }
 
     stopUpdates() {
@@ -134,15 +138,7 @@ class DashInfo {
                     if (this.changeCB) this.changeCB(newResults)
 
                 } else {
-                    //this._currentState = ReadyOld
                     this.state = ReadyOld
-                }
-
-                // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if unload occurred)
-                if (this.validity && !this._stop) {
-                    await sleep(this.validity * 1000)
-                    // noinspection ES6MissingAwait
-                    this._loadValues()
                 }
 
             } catch (e) {
@@ -154,15 +150,7 @@ class DashInfo {
                 }
             }
 
-        } else {
-            // Value from cache but launch a new cycle also - if validity and this.stop is not true (either by explicitly being set or if unload occurred)
-            if (this.validity && !this._stop) {
-                await sleep(this.validity * 1000)
-                // noinspection ES6MissingAwait
-                this._loadValues()
-            }
         }
-
     }
 
     _saveInLocalStorage(key, value) {

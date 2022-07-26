@@ -1,4 +1,6 @@
-# Initial Setup
+# Development
+
+## Initial Setup
 
 ```
 git clone @cob/dashboard-info
@@ -6,7 +8,7 @@ cd dashboard-info
 npm i
 ```
 
-# Testing
+## Running the unit tests
 You can check the status of the existing tests by running:
 
 ```
@@ -17,21 +19,7 @@ or
 npm run test <TestFileName>
 ```
 
-However these test are supposed to be running continuously throughout the development process. 
-For this first make sure you have jest cli installed:
-
-```
-npm install jest --global
-```
-
-then run jest in watch mode and check for error during the normal development process. The `-o` flag means 'only test changed files'.
-
-```
-node --experimental-vm-modules node_modules/.bin/jest —-watch -o
-```
-
-
-# Test cenario baseline
+## Test cenario baseline
 For the tests to run as planned there should be the following instances
 * In **Test Person** definition:
     * "DefinitionCount Test_*": [0](https://learning.cultofbits.com/recordm/#/definitions/6/q="DefinitionCount%20Test_*") (zero)
@@ -41,7 +29,7 @@ For the tests to run as planned there should be the following instances
     * "United": [60](https://learning.cultofbits.com/recordm/#/definitions/2/q="United")
 
 
-# Troubleshooting tests
+## Troubleshooting tests
 
 Some of the reasons tests can fail, **without just cause**, are the following:
 * incorrect base info (check above what is expected)
@@ -60,3 +48,25 @@ Notice that:
     * if more than two process running all db*.json cache info will be unreliable
 
 
+## Testing your changes with the provided examples
+
+To test the changes in the code we can use [npm link](https://docs.npmjs.com/cli/v8/commands/npm-link)
+
+1. In the dashboard-info root directory execute:
+```bash
+npm link
+```
+
+2. Then go to the `examples` folder:
+```bash 
+cd examples/styles_terminal_dashboard
+npm link @cob/dashboard-info
+node main.js
+```
+
+## Deployment
+
+```bash
+npm run lint 
+npm run build
+```
