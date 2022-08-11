@@ -19,8 +19,8 @@ const fieldWeightedAverage = (defId, fieldName, weightFieldName, query="*", opti
 const instancesList   = function(definitionName,   query="*", size=10, start=0, sort="", ascending="", options={}){
     //note: cannot be an arrow function because Arrow functions don't have their own bindings to 'arguments'
     if (arguments.length < 7) {
-        console.warn("Number of arguments is less than the expected 7. Maybe the call was written for an older version of dashinfo.\n"
-                     + "Make sure you have no holes in args list (pass undefined in those args if needed).")
+        console.warn("Number of arguments calling `instancesList` is less than the expected 7. Maybe the call was written for an older version of dashinfo.\n"
+                     + "Make sure you have no holes in args list (pass undefined in those args if needed).", arguments)
     }
 
     return new DashInfo(options, instList, {query:query, definitionName:definitionName, size:size, start:start, sort:sort, ascending:ascending })
