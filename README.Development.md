@@ -60,3 +60,12 @@ Notice that:
     * if more than two process running all db*.json cache info will be unreliable
 
 
+# Versioning and publish
+1) increment the version
+
+`npm version [<newversion> | major | minor | patch` 
+
+2) `git push`
+
+3) `npm publish` 
+
