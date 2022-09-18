@@ -121,7 +121,8 @@ DashInfo.prototype._saveInLocalStorage = function(key,value) {
         localStorage.setItem(key, value) 
         console.warn("CoB localStorage full: cleaned")
       } catch (e) {
-        // If, even with all storage available, we have an error log it 
+        // If, even with all storage available, we have an error, trim and log it 
+        localStorage.setItem(key, value.substring(0, 5000000) ) 
         console.error("CoB localStorage not enought")
       } 
     }
