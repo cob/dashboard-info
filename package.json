@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cob/rest-api-wrapper": "^2.2.0",
+    "@cob/rest-api-wrapper": "^2.3.2",
     "axios": "^0.21.1",
     "dom-storage": "^2.1.0"
   },
