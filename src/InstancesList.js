@@ -5,6 +5,7 @@ const instancesList = ({definitionName, query, size, start, sort, ascending}) =>
   .then(response => 
     ({
       value: response.hits.hits.map(e => e._source),
+      total: response.hits.total.value,
       href: response.resultsUrl
     })
   )
