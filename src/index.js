@@ -8,7 +8,6 @@ import fSum     from "./FieldSum.js"
 import fAverage from "./FieldAverage.js"
 import fWeightedAverage from "./FieldWeightedAverage.js"
 import fValues  from "./FieldValues.js"
-import fValuesH from "./FieldValuesHits.js"
 import dmEquipCount  from "./DmEquipmentCount.js"
 
 
@@ -18,8 +17,7 @@ const domainCount          = (domainId,         query="*",                  opti
 const fieldSum             = (defId, fieldName, query="*",                  options={}) => new DashInfo(options, fSum,     {query:query, defId:defId, fieldName:fieldName })
 const fieldAverage         = (defId, fieldName, query="*",                  options={}) => new DashInfo(options, fAverage, {query:query, defId:defId, fieldName:fieldName })
 const fieldValues          = (defId, fieldName, query="*", size=10,         options={}) => new DashInfo(options, fValues,  {query:query, defId:defId, fieldName:fieldName, size:size })
-const fieldValuesHits      = (defId, fieldName, query="*", size=10,         options={}) => new DashInfo(options, fValuesH, {query:query, defId:defId, fieldName:fieldName, size:size })
 const fieldWeightedAverage = (defId, fieldName, weightFieldName, query="*", options={}) => new DashInfo(options, fWeightedAverage(), {query:query, defId:defId, fieldName:fieldName, weightFieldName:weightFieldName })
 const instancesList        = (definitionName,   query="*", size=10, start=0, sort="", ascending="", options={}) => new DashInfo(options, instList, {query:query, definitionName:definitionName, size:size, start:start, sort:sort, ascending:ascending })
 
-export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldAverage, fieldWeightedAverage, fieldValues, fieldValuesHits, setServer, auth, umLoggedin, dmEquipmentCount }
+export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldAverage, fieldWeightedAverage, fieldValues, setServer, auth, umLoggedin, dmEquipmentCount }
