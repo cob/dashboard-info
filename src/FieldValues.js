@@ -28,7 +28,7 @@ const fieldValues = ({defId, fieldName, query, size=10}) => {
 
       return ({
         value: keysCount.map(e => e.key),
-        href: response.resultsUrl,
+        href: encodeURI( response.resultsUrl ),
         hits : hits
       })
     })

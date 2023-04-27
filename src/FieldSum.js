@@ -13,7 +13,7 @@ const fieldSum = ({defId, fieldName, query}) => {
   .then(response => 
     ({
       value: response.aggregations["sum#x"].value,
-      href: response.resultsUrl
+      href: encodeURI( response.resultsUrl )
     })
   )
   .catch ( e => { throw(e) })

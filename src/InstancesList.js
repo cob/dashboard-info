@@ -6,7 +6,7 @@ const instancesList = ({definitionName, query, size, start, sort, ascending}) =>
     ({
       value: response.hits.hits.map(e => e._source),
       total: response.hits.total.value,
-      href: response.resultsUrl
+      href: encodeURI( response.resultsUrl )
     })
   )
   .catch ( e => { throw(e) })
