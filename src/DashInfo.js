@@ -50,9 +50,11 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
     this.username = username
     var storedResults = localStorage.getItem(this.cacheId + "_Results");
     if (storedResults != null && storedResults !== 'undefined') {
-      this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
-      this.currentState = Cache
-      if(this.changeCB) this.changeCB(this.results)
+      if(JSON.stringify(this.results) != storedResults) {
+        this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
+        this.currentState = Cache
+        if(this.changeCB) this.changeCB(this.results)
+      }
     }
     
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
