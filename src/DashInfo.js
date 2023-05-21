@@ -44,8 +44,9 @@ DashInfo.prototype.changeArgs = function (newArgs) {
 }
 
 DashInfo.prototype.startUpdates = function ({start=true}={}) {
-  if(this.stop && start) this.stop = false
-  return umLoggedin().then( ({username}) => {
+  if (this.stop && start) this.stop = false
+
+  const processForUser = (username) => {
     // Obtem valores da localStore (de um último acesso ou outro tab do mesmo browser)
     this.username = username
     var storedResults = localStorage.getItem(this.cacheId + "_Results");
@@ -95,8 +96,15 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
         this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
       }
     }
-  })
+  }
+
+  if (typeof window !== 'undefined' && window.cob && window.cob.app.getCurrentLoggedInUser) {
+    processForUser(window.cob.app.getCurrentLoggedInUser())
+  } else {
+    return umLoggedin().then( ({username}) => processForUser(username) )
+  }
 }
+
 
 DashInfo.prototype.stopUpdates = function() {
   this.stop = true
