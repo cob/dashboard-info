@@ -61,7 +61,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
     let expirationTime = localStorage.getItem(this.cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
-    if ( now > expirationTime || expirationTime - now > this.validity*1000 || storedResults == null ) {
+    if ( now > expirationTime || expirationTime - now > this.validity*1000 ) {
       this._saveInLocalStorage(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
   
       if(this.currentState != Loading) this.currentState = Updating
@@ -89,6 +89,9 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
           this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
         }
       })
+    } else if ( storedResults == null) {
+      // wait a little if cache is validity but still no results. This means there's another query running which still hasn't return values
+      setTimeout( () => this.startUpdates({start:false}), 100)
     } else {
       // Value from cache but launch a new cycle also - if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred) 
       if(this.validity && !this.stop) {
