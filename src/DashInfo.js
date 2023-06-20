@@ -49,7 +49,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
   const processForUser = (username) => {
     // Obtem valores da localStore (de um último acesso ou outro tab do mesmo browser)
     this.username = username
-    var storedResults = localStorage.getItem(this.cacheId + "_Results");
+    var storedResults = this._getFromLocalStorage(this.cacheId, "Results");
     if (storedResults != null && storedResults !== 'undefined') {
       if(JSON.stringify(this.results) != storedResults) {
         this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
@@ -60,9 +60,9 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
     
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
-    let expirationTime = localStorage.getItem(this.cacheId + "_ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
+    let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
     if ( now > expirationTime || expirationTime - now > this.validity*1000 ) {
-      this._saveInLocalStorage(this.cacheId + "_ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
+      this._saveInLocalStorage(this.cacheId, "ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
   
       if(this.currentState != Loading) this.currentState = Updating
       return this._getNewResults()
@@ -86,7 +86,7 @@ DashInfo.prototype.startUpdates = function ({start=true}={}) {
       })
       .finally( () => {
         if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
-          this._saveInLocalStorage(this.cacheId + "_Results", JSON.stringify(this.results))
+          this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))
         }
       })
     } else if ( storedResults == null) {
@@ -114,29 +114,48 @@ DashInfo.prototype.stopUpdates = function() {
 }
 
 DashInfo.prototype.update = function({force=true}={}) {
-  if(force) localStorage.setItem(this.cacheId + "_ExpirationTime", 0)
+  if(force) this._saveInLocalStorage(this.cacheId + " ExpirationTime", 0)
   this.startUpdates()
 }
 
-DashInfo.prototype._saveInLocalStorage = function(key,value) {
+DashInfo.prototype._getStructureFromLocalStorage = function(key) {
+  const value = localStorage.getItem(key)
   try {
-    localStorage.setItem(key, value) 
+    let structuredValue = value && JSON.parse(value) || {}
+    return structuredValue || {}
+  } catch (e) {
+    console.warn("[Dashinfo] problem parsing json of key=", key, " value=", value)
+  }
+  return  {}
+}
+
+DashInfo.prototype._getFromLocalStorage = function(key,part) {
+  let structuredValue = this._getStructureFromLocalStorage(key)
+  return structuredValue[part]
+}
+
+DashInfo.prototype._saveInLocalStorage = function(key,part,value) {
+  let structuredValue = this._getStructureFromLocalStorage(key)
+  structuredValue[part] = value
+  const newStructuredValueString = JSON.stringify(structuredValue)
+  try {
+    localStorage.setItem(key, newStructuredValueString) 
   } catch {
     // Clean expired information
     this._cleanStore() 
     try {
       // Try again, to see if removing expired entries was enougth 
-      localStorage.setItem(key, value) 
+      localStorage.setItem(key, newStructuredValueString) 
     } catch (e) {
       // If it was not, them clear all cache and try again
       localStorage.clear()
       try {
-        localStorage.setItem(key, value) 
-        console.warn("CoB localStorage full: cleaned")
+        localStorage.setItem(key, newStructuredValueString) 
+        console.warn("[Dashinfo]  localStorage full: cleaned")
       } catch (e) {
         // If, even with all storage available, we have an error, trim and log it 
-        localStorage.setItem(key, value.substring(0, 5000000) ) 
-        console.error("CoB localStorage not enought")
+        localStorage.setItem(key, newStructuredValueString.substring(0, 5000000) ) 
+        console.error("[Dashinfo]  localStorage not enought for value=", newStructuredValueString)
       } 
     }
   }
@@ -147,13 +166,9 @@ DashInfo.prototype._cleanStore = function() {
   let now = Date.now()
   for (var i = 0, len = localStorage.length; i < len; ++i) {
     let key = localStorage.key(i);
-    if (key && key.endsWith("_ExpirationTime")) {
-      let expirationTime = localStorage.getItem(key);
-      if (expirationTime < now) {
-        let keyName = key.substr(0,key.indexOf("_ExpirationTime"));
-        localStorage.removeItem(keyName + "_ExpirationTime");
-        localStorage.removeItem(keyName + "_Results");
-      }
+    let expirationTime = this._getFromLocalStorage(key,"ExpirationTime");
+    if (expirationTime && expirationTime < now) {
+      localStorage.removeItem(key);
     }
   }
 }
