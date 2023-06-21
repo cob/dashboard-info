@@ -1,6 +1,8 @@
 import { umLoggedin } from "@cob/rest-api-wrapper"
 import Storage from 'dom-storage'
 
+const DEBUG = false
+
 //Add suport for localstorage in node
 if (typeof window === 'undefined' && typeof global.localStorage === 'undefined') {
     global.localStorage = new Storage('./.localstorage.json', { strict: false, ws: '  ' });
@@ -14,15 +16,27 @@ const ReadyNew = "ready"
 const ReadyOld = "cache"
 const Error    = "error"
 
-const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
-  this.validity = validity
+const DashInfo = function({validity=0, changeCB, username}, getterFunction, getterArgs) {
+
+  if(username) {
+    this.username = username
+  } else if (typeof window !== 'undefined' && window.cob && window.cob.app.getCurrentLoggedInUser) {
+      this.username = window.cob.app.getCurrentLoggedInUser()
+  } else {
+    this.username = "anonymous"
+    umLoggedin().then( userInfo => this.username = userInfo.username )
+  }
+
+  this.startDate = Date.now() // Just for debugging purposes
+  this.updateCycle = validity != 0 // don't launch cycle if validity == 0
+  this.validity = validity * 1000 // Specified in seconds 
   this.changeCB = changeCB
   this.currentState = Loading
   this.getterArgs = getterArgs || {}
   this.getterFunction = getterFunction
   this._getNewResults = () => this.getterFunction(this.getterArgs)
   this._timeoutProcess = null
-  this.results = {value:undefined, href:undefined, state: Loading}
+  this.results = {value:undefined, href:undefined} // Expected minimal structure for getterFunction answers
   Object.defineProperties(this, {
     "value":  { "get": () => this.results.value },
     "state":  { "get": () => this.currentState },
@@ -34,86 +48,89 @@ const DashInfo = function({validity=0, changeCB}, getterFunction, getterArgs) {
   // Quando num browser, parar de fazer Updates quando se sai da página actual
   if(typeof window !== 'undefined') window.addEventListener('beforeunload', () => this.stopUpdates() )
 
+  if(DEBUG) console.log("DINFO: 0 initialized startDate=",this.startDate," cacheId=",this.cacheId," this=",this)
+
   this.startUpdates()
 }
 
 DashInfo.prototype.changeArgs = function (newArgs) {
+  if(DEBUG) console.log("DINFO: 1 changeArgs: startDate=",this.startDate," cacheId=",this.cacheId,"newArgs=",newArgs)
+
   for(const key in newArgs) this.getterArgs[key] = newArgs[key]
   this._getNewResults = () => this.getterFunction(this.getterArgs)
   this.update({force:false})
 }
 
 DashInfo.prototype.startUpdates = function ({start=true}={}) {
-  if (this.stop && start) this.stop = false
+  if(DEBUG) console.log("DINFO: 2 startUpdates: ! startDate=",this.startDate," cacheId=",this.cacheId,"start=",start)
 
-  const processForUser = (username) => {
-    // Obtem valores da localStore (de um último acesso ou outro tab do mesmo browser)
-    this.username = username
-    var storedResults = this._getFromLocalStorage(this.cacheId, "Results");
-    if (storedResults != null && storedResults !== 'undefined') {
-      if(JSON.stringify(this.results) != storedResults) {
-        this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
-        this.currentState = Cache
-        if(this.changeCB) this.changeCB(this.results)
-      }
-    }
-    
-    //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
-    let now = Date.now();
-    let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime") || 0; //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
-    if ( now > expirationTime || expirationTime - now > this.validity*1000 ) {
-      this._saveInLocalStorage(this.cacheId, "ExpirationTime", now + this.validity*1000); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
-  
-      if(this.currentState != Loading) this.currentState = Updating
-      return this._getNewResults()
-      .then( results => {
-        if(JSON.stringify(this.results) != JSON.stringify(results)) {
-          this.currentState = ReadyNew
-          this.results = results
-          if(this.changeCB) this.changeCB(results)
-        } else {
-          this.currentState = ReadyOld
-        } 
-        // Launch a new cycle if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred)
-        if(this.validity && !this.stop) {
-          if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
-          this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
-        }
-      })
-      .catch( e => {
-        this.currentState = Error
-        this.errorCode = e.response && e.response.status
-      })
-      .finally( () => {
-        if (typeof this.results !== 'undefined' && typeof this.results !== 'function') {
-          this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))
-        }
-      })
-    } else if ( storedResults == null) {
-      // wait a little if cache is validity but still no results. This means there's another query running which still hasn't return values
-      setTimeout( () => this.startUpdates({start:false}), 100)
-    } else {
-      // Value from cache but launch a new cycle also - if validity != 0 and this.stop is not true (either by explicitly being set or if an unload occurred) 
-      if(this.validity && !this.stop) {
-        if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
-        this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity * 1000)
-      }
+  // If cycle is stoped but start=true then turn it on (but only if validity is not 0, which wouldn't make sense)
+  if (start && !this.updateCycle && this.validity != 0) this.updateCycle = true
+
+  // Obtem valores da localStore (de um último acesso ou outro tab do mesmo browser)
+  var storedResults = this._getFromLocalStorage(this.cacheId, "Results");
+  if (storedResults != null && storedResults !== 'undefined') {
+    if(JSON.stringify(this.results) != storedResults) {
+      if(DEBUG) console.log("DINFO: 2.0.0 startUpdates: update from cache ! startDate=",this.startDate," cacheId=",this.cacheId)
+      this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
+      this.currentState = Cache
+      if(this.changeCB) this.changeCB(this.results)
     }
   }
+  
+  //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
+  let now = Date.now();
+  let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime"); //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
+  if ( typeof expirationTime === 'undefined' || now > expirationTime || expirationTime - now > this.validity ) {
+    this._saveInLocalStorage(this.cacheId, "ExpirationTime", now + this.validity); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
+    if(DEBUG) console.log("DINFO: 2.0.1 startUpdates: Do BE query! startDate=",this.startDate," cacheId=",this.cacheId)
 
-  if (typeof window !== 'undefined' && window.cob && window.cob.app.getCurrentLoggedInUser) {
-    processForUser(window.cob.app.getCurrentLoggedInUser())
+    if(this.currentState != Loading) this.currentState = Updating
+
+    this._getNewResults().then( results => {
+      if(DEBUG) console.log("DINFO: 2.1 startUpdates: BE query done! startDate=",this.startDate," cacheId=",this.cacheId,"results=",results)
+
+      if(JSON.stringify(this.results) != JSON.stringify(results)) {
+        if(DEBUG) console.log("DINFO: 2.1.1 startUpdates: Ready & update ! startDate=",this.startDate," cacheId=",this.cacheId, " results=",JSON.stringify(results))
+        this.currentState = ReadyNew
+        this.results = results
+        this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))        
+        if(this.changeCB) this.changeCB(results)
+      } else {
+        if(DEBUG) console.log("DINFO: 2.1.2 startUpdates: ReadyOld ! startDate=",this.startDate," cacheId=",this.cacheId)
+        this.currentState = ReadyOld
+      } 
+    })
+    .catch( e => {
+      if(DEBUG) console.log("DINFO: 2.2 startUpdates: error getting update startDate=",this.startDate," cacheId=",this.cacheId)
+      this.currentState = Error
+      this.errorCode = e.response && e.response.status
+    })
+    .finally( () => {
+      this._saveInLocalStorage(this.cacheId, "State", JSON.stringify(this.currentState))        
+    })
   } else {
-    return umLoggedin().then( ({username}) => processForUser(username) )
+    if( !this._getFromLocalStorage(this.cacheId, "State") ) {
+      if(DEBUG) console.log("DINFO: 2.3 startUpdates: wait runningquery startDate=",this.startDate," cacheId=",this.cacheId)
+      setTimeout( () => this.startUpdates({start:false}), 50 )
+    }
+  }
+  
+  if(this.updateCycle) {
+    if(DEBUG) console.log("DINFO: 2.4 startUpdates: schedule next call startDate=",this.startDate," cacheId=",this.cacheId,)
+    if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
+    this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity )
   }
 }
 
-
 DashInfo.prototype.stopUpdates = function() {
-  this.stop = true
+  if(DEBUG) console.log("DINFO: 3 stopUpdates  startDate=",this.startDate)
+  if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
+  this.updateCycle = false
 }
 
 DashInfo.prototype.update = function({force=true}={}) {
+  if(DEBUG) console.log("DINFO: 4 update  startDate=",this.startDate," cacheId=",this.cacheId, " force=",force)
   if(force) this._saveInLocalStorage(this.cacheId + " ExpirationTime", 0)
   this.startUpdates()
 }

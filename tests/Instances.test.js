@@ -26,8 +26,10 @@ test('if we add 3 instances that is what we should get',  async () => {
         expect(values[1].name[0]).toMatch(/Instances_Test_\d*_[123]/)
         expect(values[2].name[0]).toMatch(/Instances_Test_\d*_[123]/)
     })
+    .finally( () => {
+        rmDeleteInstance(p1.id)
+        rmDeleteInstance(p2.id)
+        rmDeleteInstance(p3.id)
+    })
 
-    await rmDeleteInstance(p1.id)
-    await rmDeleteInstance(p2.id)
-    await rmDeleteInstance(p3.id)
 })
