@@ -43,7 +43,7 @@ test('DashInfo should only have a new value every *validity* seconds, in this ca
         await delay(200)
         expect(countInfo.value).toBe(1) // Still shouldn't change
         
-        await delay(1300)
+        await delay(1200)
         expect(countInfo.value).toBe(2) // CHANGE TIME !
         
         await delay(100)
