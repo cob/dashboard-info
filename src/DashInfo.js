@@ -2,8 +2,8 @@ import { umLoggedin } from "@cob/rest-api-wrapper"
 import Storage from 'dom-storage'
 
 // window.CoBDasHDebug = window.CoBDasHDebug || {}
-const DEBUG = false//window.CoBDasHDebug
-// window.CoBDasHDebug.info = true
+const DEBUG = window.CoBDasHDebug
+window.CoBDasHDebug.info = true
 
 //Add support for localstorage in node
 if (typeof window === 'undefined' && typeof global.localStorage === 'undefined') {
@@ -65,7 +65,7 @@ DashInfo.prototype.changeArgs = function (newArgs) {
 }
 
 DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) {
-  if(DEBUG.info) console.log("DASH: INFO: 2: startUpdates: ! startDate=",this.startDate," cacheId=",this.cacheId,"start=",start)
+  if(DEBUG.info) console.log("DASH: INFO: 2: startUpdates:  startDate=",this.startDate," cacheId=",this.cacheId,"start=",start)
 
   // If start=true then turn cycle on (but only if validity is not 0, which wouldn't make sense)
   if (start && this.validity != 0) this.updateCycle = true
@@ -74,7 +74,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
   var storedResults = this._getFromLocalStorage(this.cacheId, "Results");
   if (storedResults != null && storedResults !== 'undefined') {
     if(JSON.stringify(this.results) != storedResults) {
-      if(DEBUG.info) console.log("DASH: INFO: 2.0.0: startUpdates: update from cache ! startDate=",this.startDate," cacheId=",this.cacheId)
+      if(DEBUG.info) console.log("DASH: INFO: 2.1: startUpdates: init from cache ! startDate=",this.startDate," cacheId=",this.cacheId)
       this.results = JSON.parse(storedResults) // Se existir começa por usar a cache
       this.currentState = Cache
       if(this.changeCB) this.changeCB(this.results)
@@ -85,39 +85,41 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
   if( (currentSharedState == Loading || currentSharedState == Updating) && !this.updating && !this.stopedWaitingForCache) {
     this.waitingForCache = true
     this.currentState = currentSharedState
-    if(DEBUG.info) console.log("DASH: INFO: 2.0.0: startUpdates: wait for already running query startDate=",this.startDate," cacheId=",this.cacheId)
+    if(DEBUG.info) console.log("DASH: INFO: 2.2: startUpdates: wait for already running query startDate=",this.startDate," cacheId=",this.cacheId)
     if(!this.waitingForCacheDeadline) {
+      if(DEBUG.info) console.log("DASH: INFO: 2.2.1: startUpdates: Set deadline ! startDate=",this.startDate," cacheId=",this.cacheId)
       this.waitingForCacheDeadline = Date.now() + 10000
     } else if( Date.now() > this.waitingForCacheDeadline ) {
-      if(DEBUG.info) console.log("DASH: INFO: 2.0.0.1: startUpdates: waited to long.Stop it! startDate=",this.startDate," cacheId=",this.cacheId)
+      if(DEBUG.info) console.log("DASH: INFO: 2.2.2: startUpdates: waited to long. Do query next cycle ! startDate=",this.startDate," cacheId=",this.cacheId)
       this.stopedWaitingForCache = true
       this.waitingForCache = false
       this.waitingForCacheDeadline = 0
       this.startUpdates({start:false})
     } 
     if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
-    this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), 500 )
+    this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), 200 )
   } else if(this.waitingForCache && !this.stopedWaitingForCache) {
-    if(DEBUG.info) console.log("DASH: INFO: 2.0.0.2: startUpdates: received cache  startDate=",this.startDate," cacheId=",this.cacheId)
+    if(DEBUG.info) console.log("DASH: INFO: 2.3: startUpdates: waiting over. Received cache  startDate=",this.startDate," cacheId=",this.cacheId)
     this.waitingForCache = false
     this.stopedWaitingForCache = false
     this.waitingForCacheDeadline = 0
     this.currentState = Cache
 
     if(this.updateCycle) {
-      if(DEBUG.info) console.log("DASH: INFO: 2.0.0.3: startUpdates: schedule next call startDate=",this.startDate," cacheId=",this.cacheId,)
+      if(DEBUG.info) console.log("DASH: INFO: 2.3.1: startUpdates: schedule next call startDate=",this.startDate," cacheId=",this.cacheId,)
       if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
       this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity )
     }      
   } else if(!this.updating) {
+    if(DEBUG.info) console.log("DASH: INFO: 2.4: startUpdates: Eval BE query need. startDate=",this.startDate," cacheId=",this.cacheId)
+  
     this.stopedWaitingForCache = false
- 
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
     let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime"); //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
     if ( typeof expirationTime === 'undefined' || now > expirationTime || expirationTime - now > this.validity ) {
       this._saveInLocalStorage(this.cacheId, "ExpirationTime", now + this.validity); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
-      if(DEBUG.info) console.log("DASH: INFO: 2.0.1: startUpdates: Do BE query! startDate=",this.startDate," cacheId=",this.cacheId)
+      if(DEBUG.info) console.log("DASH: INFO: 2.4.1: startUpdates: Do BE query! startDate=",this.startDate," cacheId=",this.cacheId)
 
       if(this.currentState != Loading) this.currentState = Updating
       this._saveInLocalStorage(this.cacheId, "State", this.currentState)
@@ -125,21 +127,21 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       this.updating = true
       this._getNewResults().then( results => {
         
-        if(DEBUG.info) console.log("DASH: INFO: 2.1: startUpdates: BE query done! startDate=",this.startDate," cacheId=",this.cacheId,"results=",results)
+        if(DEBUG.info) console.log("DASH: INFO: 2.4.2: startUpdates: BE query done. startDate=",this.startDate," cacheId=",this.cacheId,"results=",results)
 
         if(JSON.stringify(this.results) != JSON.stringify(results)) {
-          if(DEBUG.info) console.log("DASH: INFO: 2.1.1: startUpdates: Ready & update ! startDate=",this.startDate," cacheId=",this.cacheId, " results=",JSON.stringify(results))
+          if(DEBUG.info) console.log("DASH: INFO: 2.4.2.1: startUpdates: Ready ! Call changeCB. startDate=",this.startDate," cacheId=",this.cacheId, " results=",JSON.stringify(results))
           this.currentState = ReadyNew
           this.results = results
           this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))        
           if(this.changeCB) this.changeCB(results)
         } else {
-          if(DEBUG.info) console.log("DASH: INFO: 2.1.2: startUpdates: ReadyOld ! startDate=",this.startDate," cacheId=",this.cacheId)
+          if(DEBUG.info) console.log("DASH: INFO: 2.4.2.2: startUpdates: ReadyOld ! startDate=",this.startDate," cacheId=",this.cacheId)
           this.currentState = ReadyOld
         } 
       })
       .catch( e => {
-        if(DEBUG.info) console.log("DASH: INFO: 2.2: startUpdates: error getting update startDate=",this.startDate," cacheId=",this.cacheId)
+        if(DEBUG.info) console.log("DASH: INFO: 2.4.3: startUpdates: BE query error. startDate=",this.startDate," cacheId=",this.cacheId)
         this._saveInLocalStorage(this.cacheId, "ExpirationTime", 0)
         this.currentState = Error
         this.errorCode = e.response && e.response.status
@@ -148,7 +150,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
         this.updating = false
         this._saveInLocalStorage(this.cacheId, "State", this.currentState)
         if(this.updateCycle) {
-          if(DEBUG.info) console.log("DASH: INFO: 2.4: startUpdates: schedule next call startDate=",this.startDate," cacheId=",this.cacheId,)
+          if(DEBUG.info) console.log("DASH: INFO: 2.4.4: startUpdates: schedule next call startDate=",this.startDate," cacheId=",this.cacheId,)
           if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
           this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), this.validity )
         }      
@@ -178,7 +180,7 @@ DashInfo.prototype._getStructureFromLocalStorage = function(key) {
     let structuredValue = value && JSON.parse(value) || {}
     return structuredValue || {}
   } catch (e) {
-    console.warn("[Dashinfo] problem parsing json of key=", key, " value=", value)
+    console.warn("DASH: INFO: _getStructureFromLocalStorage: problem parsing json of key=", key, " value=", value)
   }
   return  {}
 }
