@@ -124,7 +124,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
 
       this.updating = true
       this._getNewResults().then( results => {
-        this.updating = false
+        
         if(DEBUG.info) console.log("DASH: INFO: 2.1: startUpdates: BE query done! startDate=",this.startDate," cacheId=",this.cacheId,"results=",results)
 
         if(JSON.stringify(this.results) != JSON.stringify(results)) {
@@ -145,6 +145,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
         this.errorCode = e.response && e.response.status
       })
       .finally( () => {
+        this.updating = false
         this._saveInLocalStorage(this.cacheId, "State", this.currentState)
         if(this.updateCycle) {
           if(DEBUG.info) console.log("DASH: INFO: 2.4: startUpdates: schedule next call startDate=",this.startDate," cacheId=",this.cacheId,)
