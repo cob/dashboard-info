@@ -1,9 +1,10 @@
 import { umLoggedin } from "@cob/rest-api-wrapper"
 import Storage from 'dom-storage'
 
-// window.CoBDasHDebug = window.CoBDasHDebug || {}
+window.CoBDasHDebug = window.CoBDasHDebug || {}
+// window.CoBDasHDebug.info = true
 const DEBUG = window.CoBDasHDebug
-window.CoBDasHDebug.info = true
+// const DEBUG = false // CHANGE TO THIS TO RUN THE TESTS
 
 //Add support for localstorage in node
 if (typeof window === 'undefined' && typeof global.localStorage === 'undefined') {
