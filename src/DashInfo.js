@@ -2,7 +2,7 @@ import { umLoggedin } from "@cob/rest-api-wrapper"
 import Storage from 'dom-storage'
 
 window.CoBDasHDebug = window.CoBDasHDebug || {}
-window.CoBDasHDebug.info = true
+// window.CoBDasHDebug.info = true
 const DEBUG = window.CoBDasHDebug
 // const DEBUG = false // CHANGE TO THIS TO RUN THE TESTS
 
@@ -18,6 +18,7 @@ const Updating = "updating"
 const ReadyNew = "ready"
 const ReadyOld = "cache"
 const Error    = "error"
+const MINIMAL_VALIDITY = 30000
 
 const DashInfo = function({validity=0, changeCB, username}, getterFunction, getterArgs) {
 
@@ -59,7 +60,7 @@ const DashInfo = function({validity=0, changeCB, username}, getterFunction, gett
     if(!this.updating && this.currentState == Loading) {
       this.startUpdates({start:false})
     }
-  }, 500 )
+  }, 10 )
 }
 
 DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) {
@@ -82,12 +83,12 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
   let fastCycle = false
   let currentSharedState = this._getFromLocalStorage(this.cacheId, "State")
   if( (currentSharedState == Loading || currentSharedState == Updating) && !this.updating && !this.stopedWaitingForCache) {
+    if(DEBUG.info) console.log("DASH: INFO: 2.2: startUpdates: wait for already running query uniqueId=",this.uniqueId," cacheId=",this.cacheId)
     this.waitingForCache = true
     this.currentState = currentSharedState
-    if(DEBUG.info) console.log("DASH: INFO: 2.2: startUpdates: wait for already running query uniqueId=",this.uniqueId," cacheId=",this.cacheId)
     if(!this.waitingForCacheDeadline) {
       if(DEBUG.info) console.log("DASH: INFO: 2.2.1: startUpdates: Set deadline ! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
-      this.waitingForCacheDeadline = Date.now() + 3000
+      this.waitingForCacheDeadline = Date.now() + 3000 // 3s is the limit to givin up and do a BE request (it can happen if a query is left in the middle)
     } else if( Date.now() > this.waitingForCacheDeadline ) {
       if(DEBUG.info) console.log("DASH: INFO: 2.2.2: startUpdates: waited to long. Do query next cycle ! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
       this.stopedWaitingForCache = true
@@ -108,32 +109,35 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
     this.stopedWaitingForCache = false
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
-    let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime"); //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão
-    if ( forceUpdate || typeof expirationTime === 'undefined' || now > expirationTime || expirationTime - now > this.validity ) {
-      this._saveInLocalStorage(this.cacheId, "ExpirationTime", now + this.validity); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão
+    let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime"); //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão de outro tab
+    if ( forceUpdate || typeof expirationTime === 'undefined' || now - MINIMAL_VALIDITY > expirationTime || expirationTime - now > this.validity + MINIMAL_VALIDITY ) {
       if(DEBUG.info) console.log("DASH: INFO: 2.4.1: startUpdates: Do BE query! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
 
+      this._saveInLocalStorage(this.cacheId, "ExpirationTime", now + this.validity); //Fazer isto imediatamente DEPOIS do teste à expiração para minimizar tempo de colisão de outro tab
+      this.updating = true
       if(this.currentState != Loading) this.currentState = Updating
       this._saveInLocalStorage(this.cacheId, "State", this.currentState)
 
-      this.updating = true
       this._getNewResults()
       .then( results => {  
         if(DEBUG.info) console.log("DASH: INFO: 2.4.2: startUpdates: BE query done. uniqueId=",this.uniqueId," cacheId=",this.cacheId,"results=",results)
 
         if(JSON.stringify(this.results) != JSON.stringify(results)) {
           if(DEBUG.info) console.log("DASH: INFO: 2.4.2.1: startUpdates: Ready ! Call changeCB. uniqueId=",this.uniqueId," cacheId=",this.cacheId, " results=",JSON.stringify(results))
+
           this.currentState = ReadyNew
           this.results = results
           if(this.changeCB) this.changeCB(results)
         } else {
           if(DEBUG.info) console.log("DASH: INFO: 2.4.2.2: startUpdates: ReadyOld ! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
+
           this.currentState = ReadyOld
         } 
         this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))        
       })
       .catch( e => {
         if(DEBUG.info) console.log("DASH: INFO: 2.4.3: startUpdates: BE query error. uniqueId=",this.uniqueId," cacheId=",this.cacheId)
+
         this._saveInLocalStorage(this.cacheId, "ExpirationTime", 0)
         this.currentState = Error
         this.errorCode = e.response && e.response.status
@@ -147,10 +151,10 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
 
   if(this.updateCycle || fastCycle) {
     if(DEBUG.info) console.log("DASH: INFO: 2.3.1: startUpdates: schedule next call uniqueId=",this.uniqueId," cacheId=",this.cacheId,)
+
     if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
     this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), fastCycle ? 200 : this.validity )
   }      
-
 }
 
 DashInfo.prototype.changeArgs = function (newArgs) {
@@ -163,9 +167,10 @@ DashInfo.prototype.changeArgs = function (newArgs) {
 
 DashInfo.prototype.stopUpdates = function() {
   if(DEBUG.info) console.log("DASH: INFO: 3: stopUpdates  uniqueId=",this.uniqueId," cacheId=",this.cacheId)
-  if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
-  this.updating = false
-  this._timeoutProcess = null
+  if(!this.waitingForCacheDeadline && this._timeoutProcess) {
+    clearTimeout(this._timeoutProcess)
+    this._timeoutProcess = null
+  }
   this.updateCycle = false
 }
 
