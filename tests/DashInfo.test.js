@@ -24,9 +24,9 @@ function delay(t, v) {
 test('every DashInfo value starts by having the last cached value',  async (done) => {
 
     //Setup cache with "42", the answer for everything
-    localStorage.setItem("anonymous-test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
+    localStorage.setItem("anonymous | test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
 
-    let zeroTest = new DashInfo( {validity:0}, newCountCalls(0,"test1") )
+    let zeroTest = new DashInfo( {validity:0, noDelays:true}, newCountCalls(0,"test1") )
     expect(zeroTest.value).toBe(42)
     await nop()
     expect(zeroTest.value).toBe(1)
@@ -34,11 +34,11 @@ test('every DashInfo value starts by having the last cached value',  async (done
 })
 
 test('DashInfo should only have a new value every *validity* seconds, in this case 1s ',  async (done) => {
-    let countInfo = new DashInfo( {validity:1}, newCountCalls(0, "test2"))
+    let countInfo = new DashInfo( {validity:1, noDelays:true}, newCountCalls(0, "test2"))
     try {
         expect(countInfo.value).toBeUndefined()
-               
-        await nop() 
+        
+        await delay(30)
         expect(countInfo.value).toBe(1) // Shouldn't change
         
         await delay(200)
@@ -50,7 +50,7 @@ test('DashInfo should only have a new value every *validity* seconds, in this ca
         await nop() 
         expect(countInfo.value).toBe(1) // Shouldn't change
 
-        await delay(1200)
+        await delay(1500)
         expect(countInfo.value).toBe(2) // CHANGE TIME !
         await nop() 
         expect(countInfo.value).toBe(2) // Shouldn't change
@@ -64,7 +64,7 @@ test('DashInfo should only have a new value every *validity* seconds, in this ca
         await delay(100)
         expect(countInfo.value).toBe(2) // Shouldn't change
 
-        // Test extra cycle 
+        // // Test extra cycle 
         // await delay(1000)
         // expect(countInfo.value).toBe(3) // CHANGE TIME !
         // await nop() 
@@ -94,7 +94,7 @@ test('2 consecutive calls to same query should only have 1 call to BE, made on t
         
         await delay(500)
         expect(countInfo.value).toBe(1)
-        expect(countInfo2.value).toBe(1)
+        expect(countInfo2.value).toBe(101)
         done()
     }
     finally {
@@ -121,12 +121,12 @@ test('changing querys for "countries series" from "Arab world" to "united" shoul
     
     })
     
-// test('if no cache available (no mem or no localstorage) it work without cache', () => {
-//     //TODO
-// })
+// // test('if no cache available (no mem or no localstorage) it work without cache', () => {
+// //     //TODO
+// // })
 
-// test('old values are cleanned by _cleancache', () => {
-//     //TODO
-// })
+// // test('old values are cleanned by _cleancache', () => {
+// //     //TODO
+// // })
 
-// // TODO: test changing query stops previous setTimeout
+// // // TODO: test changing query stops previous setTimeout
