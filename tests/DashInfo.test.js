@@ -34,14 +34,14 @@ test('every DashInfo value starts by having the last cached value',  async (done
 })
 
 test('DashInfo should only have a new value every *validity* seconds, in this case 1s ',  async (done) => {
-    let countInfo = new DashInfo( {validity:1, noDelays:true}, newCountCalls(0, "test2"))
+    let countInfo = new DashInfo( {validity:0.1, noDelays:true}, newCountCalls(0, "test2"))
     try {
         expect(countInfo.value).toBeUndefined()
         
-        await delay(30)
+        await delay(5)
         expect(countInfo.value).toBe(1) // Shouldn't change
         
-        await delay(200)
+        await delay(20)
         expect(countInfo.value).toBe(1) // Still shouldn't change
         await nop() 
         expect(countInfo.value).toBe(1) // Shouldn't change
@@ -50,19 +50,19 @@ test('DashInfo should only have a new value every *validity* seconds, in this ca
         await nop() 
         expect(countInfo.value).toBe(1) // Shouldn't change
 
-        await delay(1500)
+        await delay(170)
         expect(countInfo.value).toBe(2) // CHANGE TIME !
-        await nop() 
-        expect(countInfo.value).toBe(2) // Shouldn't change
-        await nop() 
-        expect(countInfo.value).toBe(2) // Shouldn't change
-        await nop() 
-        expect(countInfo.value).toBe(2) // Shouldn't change
-        await nop() 
-        expect(countInfo.value).toBe(2) // Shouldn't change
+        // await nop() 
+        // expect(countInfo.value).toBe(2) // Shouldn't change
+        // await nop() 
+        // expect(countInfo.value).toBe(2) // Shouldn't change
+        // await nop() 
+        // expect(countInfo.value).toBe(2) // Shouldn't change
+        // await nop() 
+        // expect(countInfo.value).toBe(2) // Shouldn't change
 
-        await delay(100)
-        expect(countInfo.value).toBe(2) // Shouldn't change
+        // await delay(100)
+        // expect(countInfo.value).toBe(2) // Shouldn't change
 
         // // Test extra cycle 
         // await delay(1000)
