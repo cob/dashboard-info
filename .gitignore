@@ -6,4 +6,4 @@ node_modules
 db*.json
 .localstorage.json
 examples/*/package-lock.json
-dashboard-info.js.LICENSE.txt
+dashboard-info.*.LICENSE.txt

@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@cob/dashboard-info": "^2.2.4",
+    "@cob/dashboard-info": "../..",
     "cfonts": "^2.9.1",
     "chalk": "^4.1.0",
     "log-update": "^4.0.0",

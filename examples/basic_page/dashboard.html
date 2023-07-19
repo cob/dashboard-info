@@ -1,11 +1,18 @@
-<script type="module" src="https://cdn.jsdelivr.net/gh/cob/dashboard-info@2/dist/dashboard-info.js"></script>
+<script>window.process = { env : { DEBUG: false } }</script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/cob/dashboard-info@v2.8.1/dist/dashboard-info.js"></script>
 
 <div>
     <h2> Test Persons: <span id="personsCount"></span> </h2>
+    <h2> Number of Countries: <span id="countriesCount"></span> </h2>
+    <h2> Average Arab Population: <span id="avgArabePopulation"></span> </h2>
 </div>
 
 <script >
     const updateElement = (elemId) => (newInfo) => document.getElementById(elemId).innerHTML = newInfo.value
 
     cobDashboardInfo.definitionCount("Test Person", "*", { changeCB: updateElement("personsCount") })
+
+    cobDashboardInfo.definitionCount("Countries", "*", { changeCB: updateElement("countriesCount") })
+
+    cobDashboardInfo.fieldAverage(2,"value",'Arab  World indicator_name:"population, total"', { changeCB: updateElement("avgArabePopulation") })
 </script>
