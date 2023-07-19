@@ -6,7 +6,7 @@ window.CoBDasHDebug = window.CoBDasHDebug || {}
 const DEBUG = window.CoBDasHDebug
 // const DEBUG = {info:false} // CHANGE TO THIS TO RUN THE TESTS
 
-//Add support for localstorage in node
+//Add support for localStorage in node
 if (typeof window === 'undefined' && typeof global.localStorage === 'undefined') {
     global.localStorage = new Storage('./.localstorage.json', { strict: false, ws: '  ' });
     global.sessionStorage = new Storage(null, { strict: true });
