@@ -9,6 +9,7 @@ import fAverage from "./FieldAverage.js"
 import fWeightedAverage from "./FieldWeightedAverage.js"
 import fValues  from "./FieldValues.js"
 import dmEquipCount  from "./DmEquipmentCount.js"
+import * as HttpRequest from "./HttpRequest.js"
 
 
 const dmEquipmentCount     = (query="*",                                    options={}) => new DashInfo(options, dmEquipCount, {query:query})
@@ -19,5 +20,7 @@ const fieldAverage         = (defId, fieldName, query="*",                  opti
 const fieldValues          = (def,   fieldName, query="*", size=10,         options={}) => new DashInfo(options, fValues,  {query:query, def:def, fieldName:fieldName, size:size, sort:options.sort, ascending:options.ascending })
 const fieldWeightedAverage = (defId, fieldName, weightFieldName, query="*", options={}) => new DashInfo(options, fWeightedAverage(), {query:query, defId:defId, fieldName:fieldName, weightFieldName:weightFieldName })
 const instancesList        = (definitionName,   query="*", size=10, start=0, sort="", ascending="", options={}) => new DashInfo(options, instList, {query:query, definitionName:definitionName, size:size, start:start, sort:sort, ascending:ascending })
+const httpGet              = (url, axiosConfig, options={}) => new DashInfo(options, HttpRequest.httpGet, {url, axiosConfig})
+const httpPost             = (url, data, axiosConfig, options={}) => new DashInfo(options, HttpRequest.httpPost, {url, data, axiosConfig})
 
-export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldAverage, fieldWeightedAverage, fieldValues, setServer, auth, umLoggedin, dmEquipmentCount }
+export { DashInfo, definitionCount, instancesList, domainCount, fieldSum, fieldAverage, fieldWeightedAverage, fieldValues, setServer, auth, umLoggedin, dmEquipmentCount, httpGet, httpPost }
