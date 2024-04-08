@@ -1,7 +1,7 @@
 import { rmDefinitionSearch } from "@cob/rest-api-wrapper"
 
-const definitionCount = ({definitionName, query}) => 
-  rmDefinitionSearch(definitionName,query, 0, 0)
+const definitionCount = ({definitionName, query, tz}) => 
+  rmDefinitionSearch(definitionName,query, 0, 0, "", "", tz)
   .then(response => 
     ({
       value: response.hits.total.value,
