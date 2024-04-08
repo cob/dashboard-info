@@ -1,6 +1,6 @@
 import { rmDefinitionAggregation } from "@cob/rest-api-wrapper"
 
-const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc" }) => {
+const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc", tz}) => {
   if(fieldName.endsWith(".raw")) {
     fieldName = fieldName.slice(0,-4);
   }
@@ -14,7 +14,7 @@ const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc" }
     }
   }
 
-  return rmDefinitionAggregation(def, agg , query, 0, size, sort=sort, ascending="asc")
+  return rmDefinitionAggregation(def, agg , query, 0, size, sort=sort, ascending="asc", tz)
     .then(response => {
       let keysCount = response.aggregations['sterms#x'].buckets
       let hits = {}
