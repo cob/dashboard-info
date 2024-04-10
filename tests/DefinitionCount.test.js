@@ -42,3 +42,15 @@ test('if we add another instance then there should be 1 more', async () => {
     })
 
 })
+
+test('Count of "countries series" for arab world in 2018-07-10 should be 4, if passed with timezone and 0 otherwise', async () => {
+
+    const with_tz = await definitionCount({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World", tz: "Europe/Lisbon"} )
+    expect(with_tz.value).toBe(4)
+    expect(with_tz.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=year.date:2018-07-10 Arab World")
+
+    const without_tz = await definitionCount({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World"} )
+    expect(without_tz.value).toBe(0)
+    expect(without_tz.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=year.date:2018-07-10 Arab World")
+
+})

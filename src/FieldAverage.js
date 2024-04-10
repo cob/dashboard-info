@@ -1,6 +1,6 @@
 import { rmDefinitionAggregation } from "@cob/rest-api-wrapper"
 
-const fieldAverage = ({defId, fieldName, query}) => {
+const fieldAverage = ({defId, fieldName, query, tz}) => {
   let agg = {
     "x": {
       "avg": {
@@ -9,7 +9,7 @@ const fieldAverage = ({defId, fieldName, query}) => {
     }
   }
 
-  return rmDefinitionAggregation(defId, agg , query)
+  return rmDefinitionAggregation(defId, agg , query, 0, 0, "", "", tz)
   .then(response => 
     ({
       value: response.aggregations["avg#x"].value,
