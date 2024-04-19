@@ -33,3 +33,15 @@ test('if we add 3 instances that is what we should get',  async () => {
     })
 
 })
+
+test('Count of "countries series" for arab world in 2018-07-10 should be 4, if passed with timezone and 0 otherwise', async () => {
+
+    const with_tz = await instancesList({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World", size:100, tz: "Europe/Lisbon"} )
+    expect(with_tz.value.length).toBe(4)
+
+    const without_tz = await instancesList({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World", size:100} )
+    expect(without_tz.value.length).toBe(0)
+
+})
+
+
