@@ -36,7 +36,7 @@ const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc", 
       }
       return ({
         value: keysCount.map(e => e.key),
-        href: encodeURI( response.resultsUrl ),
+        href: response.resultsUrl ,
         hits : hits
       })
     })

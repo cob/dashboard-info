@@ -18,7 +18,7 @@ const fieldWeightedAverage = ({defId, fieldName, weightFieldName, query, tz}) =>
   .then(response => 
     ({
       value: response.aggregations["weighted_avg#x"].value,
-      href: encodeURI( response.resultsUrl )
+      href: response.resultsUrl
     })
   )
   .catch ( e => { throw(e) })

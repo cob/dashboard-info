@@ -13,7 +13,7 @@ const fieldAverage = ({defId, fieldName, query, tz}) => {
   .then(response => 
     ({
       value: response.aggregations["avg#x"].value,
-      href: encodeURI( response.resultsUrl )
+      href: response.resultsUrl
     })
   )
   .catch ( e => { throw(e) })
