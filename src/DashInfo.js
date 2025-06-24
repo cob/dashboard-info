@@ -48,11 +48,20 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   this.updating = false;
   this.noDelays = noDelays
   Object.defineProperties(this, {
-    "value":  { "get": () => this.results.value },
-    "state":  { "get": () => this.currentState },
-    "href":   { "get": () => this.results.href },
-    "id":     { "get": () => [getterFunction.name,...Object.values(this.getterArgs)].join(" | ") },
-    "cacheId":{ "get": () => this.username + ' | ' + this.id }
+    "value": { "get": () => this.results.value },
+    "state": { "get": () => this.currentState },
+    "href": { "get": () => this.results.href },
+    "id": {
+            get: () => [
+              getterFunction.name,
+              ...Object.values(this.getterArgs).map(val =>
+                typeof val === "object" && val !== null
+                  ? JSON.stringify(val)
+                  : String(val)
+              )
+            ].join(" | ")
+    },
+    "cacheId": { "get": () => this.username + ' | ' + this.id }
   })
   
   // Quando num browser, parar de fazer Updates quando se sai da página actual. Deve ser feito pela app mas assim é garantido
