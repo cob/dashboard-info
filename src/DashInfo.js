@@ -47,20 +47,23 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   this.results = {value:undefined, href:undefined} // Expected minimal structure for getterFunction answers
   this.updating = false;
   this.noDelays = noDelays
+
+  
+  // Generate a unique id based on the getter function and its arguments.
+  // The args can be literal objects when dealing with httpPost and httpGet, 
+  // so we stringify them to avoid key conflicts between same concurrent calls
+  const generateId = (func, args) => [
+    func.name,
+    ...Object.values(args).map(val => 
+      (typeof val === 'object' && val !== null) ? JSON.stringify(val) : String(val)
+    )
+  ].join(" | ");
+
   Object.defineProperties(this, {
     "value": { "get": () => this.results.value },
     "state": { "get": () => this.currentState },
     "href": { "get": () => this.results.href },
-    "id": {
-            get: () => [
-              getterFunction.name,
-              ...Object.values(this.getterArgs).map(val =>
-                typeof val === "object" && val !== null
-                  ? JSON.stringify(val)
-                  : String(val)
-              )
-            ].join(" | ")
-    },
+    "id": { "get": () => generateId(getterFunction, this.getterArgs) },
     "cacheId": { "get": () => this.username + ' | ' + this.id }
   })
   
