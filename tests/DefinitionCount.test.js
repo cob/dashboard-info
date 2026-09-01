@@ -3,12 +3,10 @@ import definitionCount from "../src/DefinitionCount.js"
 import { auth, rmAddInstance, rmDeleteInstance } from "@cob/rest-api-wrapper"
 
 
-test('for learning app, "countries series" count for "Arab world" is 20', () => {
-    definitionCount({definitionName:"Countries Series", query:"Arab world"} )
-    .then( results => {
-        expect(results.value).toBe(20)
-        expect(results.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab world")
-    })
+test('for learning app, "countries series" count for "Arab world" is 20', async () => {
+    const results = await definitionCount({definitionName:"Countries Series", query:"Arab world"} )
+    expect(results.value).toBe(20)
+    expect(results.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab%20world")
 })
 
 
@@ -43,14 +41,14 @@ test('if we add another instance then there should be 1 more', async () => {
 
 })
 
-test('Count of "countries series" for arab world in 2018-07-10 should be 4, if passed with timezone and 0 otherwise', async () => {
+test('Count of "countries series" for arab world in 2018-07-10 should be 4, if passed with the matching timezone and 0 with a non-matching one', async () => {
 
     const with_tz = await definitionCount({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World", tz: "Europe/Lisbon"} )
     expect(with_tz.value).toBe(4)
-    expect(with_tz.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=year.date:2018-07-10 Arab World")
+    expect(with_tz.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=year.date%3A2018-07-10%20Arab%20World")
 
-    const without_tz = await definitionCount({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World"} )
-    expect(without_tz.value).toBe(0)
-    expect(without_tz.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=year.date:2018-07-10 Arab World")
+    const wrong_tz = await definitionCount({definitionName:"Countries Series", query:"year.date:2018-07-10 Arab World", tz: "UTC"} )
+    expect(wrong_tz.value).toBe(0)
+    expect(wrong_tz.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=year.date%3A2018-07-10%20Arab%20World")
 
 })
