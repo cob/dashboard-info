@@ -10,8 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@cob/rest-api-wrapper": "^2.9.0",
-    "axios": "^0.21.4",
+    "@cob/rest-api-wrapper": "^2.9.1",
+    "axios": "^1.20.0",
     "dom-storage": "^2.1.0"
   },
   "devDependencies": {
@@ -24,6 +24,9 @@
     "roots": [
       "src/",
       "tests/"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^node:(.*)$": "<rootDir>/tests/shims/node_$1.cjs"
+    }
   }
 }
