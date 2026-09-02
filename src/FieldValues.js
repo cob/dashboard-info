@@ -15,7 +15,7 @@ const sortFunction = (sortField, direction, a, b) => {
 
   // Check if both are numbers
   const isNumA = typeof xA === "number" || isNumeric(xA);
-  const isNumB = typeof xB === "number" || isNumeric(xA);
+  const isNumB = typeof xB === "number" || isNumeric(xB);
 
   if (isNumA && isNumB) {
       // Compare numerically
@@ -73,3 +73,4 @@ const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc", 
 }
 
 export default fieldValues
+export { sortFunction }
