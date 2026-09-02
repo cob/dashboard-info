@@ -1,14 +1,10 @@
 import { setServer, auth, umLoggedin } from "@cob/rest-api-wrapper"
 import DashInfo from "./DashInfo.js"
 
-import defCount from "./DefinitionCount.js"
 import instList from "./InstancesList.js"
-import domCount from "./DomainCount.js"
-import fSum     from "./FieldSum.js"
-import fAverage from "./FieldAverage.js"
-import fWeightedAverage from "./FieldWeightedAverage.js"
 import fValues  from "./FieldValues.js"
-import dmEquipCount  from "./DmEquipmentCount.js"
+import { definitionCount as defCount, domainCount as domCount, equipmentCount as dmEquipCount } from "./Counts.js"
+import { fieldSum as fSum, fieldAverage as fAverage, fieldWeightedAverage as fWeightedAverage } from "./FieldAggregations.js"
 import * as HttpRequest from "./HttpRequest.js"
 
 

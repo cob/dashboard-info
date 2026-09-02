@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import fieldAverage from "../src/FieldAverage.js"
+import { fieldAverage } from "../src/FieldAggregations.js"
 
 test('for "Arab world" population average over years is 403930002,4', (done) => {
     fieldAverage({defId:2, fieldName:"value", query:'Arab  World indicator_name:"population, total"' })

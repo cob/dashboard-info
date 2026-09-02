@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import fieldWeightedAverage from "../src/FieldWeightedAverage.js"
+import { fieldWeightedAverage } from "../src/FieldAggregations.js"
 
 test('for "Arab world" population Weighted average over years is 399413697,382, weighted by the instanceId :)', (done) => {
     fieldWeightedAverage({defId:2, fieldName:"value", weightFieldName:"instanceId", query:'Arab  World indicator_name:"population, total"' })
