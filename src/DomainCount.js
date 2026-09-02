@@ -10,4 +10,7 @@ const domainCount = ({domainId, query}) =>
   )
   .catch ( e => { throw(e) })
 
+// Explicit id for DashInfo cache keys: survives function-name minification
+domainCount.id = "domainCount"
+
 export default domainCount

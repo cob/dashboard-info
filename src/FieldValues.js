@@ -72,5 +72,8 @@ const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc", 
     })
 }
 
+// Explicit id for DashInfo cache keys: survives function-name minification
+fieldValues.id = "fieldValues"
+
 export default fieldValues
 export { sortFunction }

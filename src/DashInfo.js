@@ -28,6 +28,18 @@ const FAST_UPDATE = 200
 // without ever touching keys that belong to the host application
 const STORAGE_KEY_PREFIX = "cob-dash-info | "
 
+// Instances with scheduled updates. A single shared 'beforeunload' listener stops
+// them all: one listener per instance would accumulate (and retain the instances)
+// in applications that create DashInfos over time.
+const activeInstances = new Set()
+let unloadListenerRegistered = false
+const registerUnloadListener = () => {
+  if (!unloadListenerRegistered) {
+    unloadListenerRegistered = true
+    window.addEventListener('beforeunload', () => activeInstances.forEach( instance => instance.stopUpdates() ))
+  }
+}
+
 const DashInfo = function({validity=0, changeCB, username, noDelays=false}, getterFunction, getterArgs) {
 
   if(username) {
@@ -36,7 +48,9 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
       this.username = window.cob.app.getCurrentLoggedInUser()
   } else {
     this.username = "anonymous"
-    umLoggedin().then( userInfo => this.username = userInfo.username )
+    umLoggedin()
+      .then( userInfo => this.username = userInfo.username )
+      .catch( () => {} ) // keep "anonymous" when not logged in or unreachable
   }
 
   if(DEBUG.info) this.uniqueId = Math.floor(Math.random() * Date.now()) // Just for debugging purposes
@@ -53,10 +67,12 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
 
   
   // Generate a unique id based on the getter function and its arguments.
-  // The args can be literal objects when dealing with httpPost and httpGet, 
-  // so we stringify them to avoid key conflicts between same concurrent calls
+  // The args can be literal objects when dealing with httpPost and httpGet,
+  // so we stringify them to avoid key conflicts between same concurrent calls.
+  // Prefer an explicit func.id: minified production bundles mangle function
+  // names, and two different getters sharing a mangled name would collide
   const generateId = (func, args) => [
-    func.name,
+    func.id || func.name,
     ...Object.values(args).map(val => 
       (typeof val === 'object' && val !== null) ? JSON.stringify(val) : String(val)
     )
@@ -71,7 +87,8 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   })
   
   // Quando num browser, parar de fazer Updates quando se sai da página actual. Deve ser feito pela app mas assim é garantido
-  if(typeof window !== 'undefined') window.addEventListener('beforeunload', () => this.stopUpdates() )
+  activeInstances.add(this)
+  registerUnloadListener()
 
   if(DEBUG.info) console.log("DASH: INFO: 0: initialized uniqueId=",this.uniqueId," cacheId=",this.cacheId," this=",this)
 
@@ -135,7 +152,9 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
     let expirationTime = this._getFromLocalStorage(this.cacheId, "ExpirationTime"); //Fazer isto imediatamente ANTES do teste à expiração para minimizar tempo de colisão de outro tab
-    if ( forceUpdate || typeof expirationTime === 'undefined' || now > expirationTime || expirationTime - now > this.refreshInterval ) {
+    // now >= expirationTime: the update timer can fire exactly at the expiration
+    // instant, and the value must already be considered expired then
+    if ( forceUpdate || typeof expirationTime === 'undefined' || now >= expirationTime || expirationTime - now > this.refreshInterval ) {
       if(DEBUG.info) console.log("DASH: INFO: 2.5.1: startUpdates: Do BE query! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
 
       let timeToExpire = this.refreshInterval > MINIMAL_VALIDITY || this.noDelays ? this.refreshInterval : MINIMAL_VALIDITY
@@ -148,6 +167,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       .then( results => {  
         if(DEBUG.info) console.log("DASH: INFO: 2.5.2: startUpdates: BE query done. uniqueId=",this.uniqueId," cacheId=",this.cacheId,"results=",results)
 
+        this.errorCode = undefined
         if(JSON.stringify(this.results) != JSON.stringify(results)) {
           if(DEBUG.info) console.log("DASH: INFO: 2.5.2.1: startUpdates: Ready ! Call changeCB. uniqueId=",this.uniqueId," cacheId=",this.cacheId, " results=",JSON.stringify(results))
 
@@ -167,6 +187,9 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
         this._saveInLocalStorage(this.cacheId, "ExpirationTime", 0)
         this.currentState = Error
         this.errorCode = e.response && e.response.status
+        // Notify the app: without this, UIs driven by changeCB would never
+        // learn about the error (state and errorCode are on the instance)
+        if(this.changeCB) this.changeCB(this.results)
       })
       .finally( () => {
         this.updating = false
@@ -181,8 +204,9 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
     if(DEBUG.info) console.log("DASH: INFO: 2.7: startUpdates: schedule next call uniqueId=",this.uniqueId," cacheId=",this.cacheId,)
 
     if(this._timeoutProcess) clearTimeout(this._timeoutProcess)
+    activeInstances.add(this) // (re)joins the shared beforeunload cleanup while a timer is scheduled
     this._timeoutProcess = setTimeout( () => this.startUpdates({start:false}), fastCycle ? FAST_UPDATE : this.refreshInterval )
-  }      
+  }
 }
 
 DashInfo.prototype.changeArgs = function (newArgs) {
@@ -194,11 +218,12 @@ DashInfo.prototype.changeArgs = function (newArgs) {
 
 DashInfo.prototype.stopUpdates = function() {
   if(DEBUG.info) console.log("DASH: INFO: 3: stopUpdates  uniqueId=",this.uniqueId," cacheId=",this.cacheId)
-  if(!this.waitingForCacheDeadline && this._timeoutProcess) {
+  if(this._timeoutProcess) {
     clearTimeout(this._timeoutProcess)
     this._timeoutProcess = null
   }
   this.updateCycle = false
+  activeInstances.delete(this) // allows the instance to be garbage collected
 }
 
 DashInfo.prototype.update = function({force=true}={}) {

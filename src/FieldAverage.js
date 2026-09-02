@@ -19,4 +19,7 @@ const fieldAverage = ({defId, fieldName, query, tz}) => {
   .catch ( e => { throw(e) })
 }
 
+// Explicit id for DashInfo cache keys: survives function-name minification
+fieldAverage.id = "fieldAverage"
+
 export default fieldAverage

@@ -10,4 +10,7 @@ const definitionCount = ({definitionName, query, tz}) =>
   )
   .catch ( e => { throw(e) })
 
+// Explicit id for DashInfo cache keys: survives function-name minification
+definitionCount.id = "definitionCount"
+
 export default definitionCount

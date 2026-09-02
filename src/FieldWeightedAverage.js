@@ -24,4 +24,7 @@ const fieldWeightedAverage = ({defId, fieldName, weightFieldName, query, tz}) =>
   .catch ( e => { throw(e) })
 }
 
+// Explicit id for DashInfo cache keys: survives function-name minification
+fieldWeightedAverage.id = "fieldWeightedAverage"
+
 export default fieldWeightedAverage
