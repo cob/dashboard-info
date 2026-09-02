@@ -21,7 +21,7 @@ function delay(t, v) {
     });
  }
 
-test('every DashInfo value starts by having the last cached value',  async (done) => {
+test('every DashInfo value starts by having the last cached value',  async () => {
 
     //Setup cache with "42", the answer for everything
     localStorage.setItem("anonymous | test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
@@ -30,10 +30,9 @@ test('every DashInfo value starts by having the last cached value',  async (done
     expect(zeroTest.value).toBe(42)
     await nop()
     expect(zeroTest.value).toBe(1)
-    done()
 })
 
-test('DashInfo should only have a new value every *validity* seconds, in this case 1s ',  async (done) => {
+test('DashInfo should only have a new value every *validity* seconds, in this case 1s ',  async () => {
     let countInfo = new DashInfo( {validity:0.1, noDelays:true}, newCountCalls(0, "test2"))
     try {
         expect(countInfo.value).toBeUndefined()
@@ -64,24 +63,22 @@ test('DashInfo should only have a new value every *validity* seconds, in this ca
         // await delay(100)
         // expect(countInfo.value).toBe(2) // Shouldn't change
 
-        // // Test extra cycle 
+        // // Test extra cycle
         // await delay(1000)
         // expect(countInfo.value).toBe(3) // CHANGE TIME !
-        // await nop() 
+        // await nop()
         // expect(countInfo.value).toBe(3) // Shouldn't change
-        // await nop() 
+        // await nop()
         // expect(countInfo.value).toBe(3) // Shouldn't change
-        // await nop() 
+        // await nop()
         // expect(countInfo.value).toBe(3) // Shouldn't change
-        
-        done()
     }
     finally {
         countInfo.stopUpdates()
     }
 })    
 
-test('2 consecutive calls to same query should only have 1 call to BE, made on the first Dashinfo ',  async (done) => {
+test('2 consecutive calls to same query should only have 1 call to BE, made on the first Dashinfo ',  async () => {
     let countCalls = newCountCalls(0, "test3")
     let countCalls2 = newCountCalls(100, "test3")
 
@@ -95,7 +92,6 @@ test('2 consecutive calls to same query should only have 1 call to BE, made on t
         await delay(500)
         expect(countInfo.value).toBe(1)
         expect(countInfo2.value).toBe(101)
-        done()
     }
     finally {
         countInfo.stopUpdates()
@@ -103,22 +99,21 @@ test('2 consecutive calls to same query should only have 1 call to BE, made on t
     }
 })    
 
-test('changing querys for "countries series" from "Arab world" to "united" should change 20 to 60', async (done) => {
+test('changing querys for "countries series" from "Arab world" to "united" should change 20 to 60', async () => {
     // TODO
         const mockUpdateCb = jest.fn()
         let dc = definitionCount( "Countries Series", "Arab world", {changeCB: mockUpdateCb})
-    
+
         await  delay(1000)
-        expect(dc.results.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab world")
+        expect(dc.results.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=Arab%20world")
         expect(dc.value).toBe(20)
-    
+
         dc.changeArgs({query:"United"})
         dc.stopUpdates()
         await delay(1000)
         expect(dc.results.href).toBe("https://learning.cultofbits.com/recordm/#/definitions/2/q=United")
         expect(dc.value).toBe(60)
-        done()
-    
+
     })
     
 // // test('if no cache available (no mem or no localstorage) it work without cache', () => {
