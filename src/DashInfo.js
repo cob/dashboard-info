@@ -32,7 +32,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
 
   if(username) {
     this.username = username
-  } else if (typeof window !== 'undefined' && window.cob && window.cob.app.getCurrentLoggedInUser) {
+  } else if (typeof window !== 'undefined' && window.cob?.app?.getCurrentLoggedInUser) {
       this.username = window.cob.app.getCurrentLoggedInUser()
   } else {
     this.username = "anonymous"

@@ -43,16 +43,16 @@ Auxiliary functions that allow you to specify the server and the credential. The
 A small program to display in a console all changes to the total count of **Persons** every 60s:
 
 ```javascript
-const { auth, setServer, DefinitionCount } = require("@cob/dashboard-info")
-
-function showCB(value, resultsUrl) {
-    console.log(value)
+function showCB(info) {
+    console.log(info.value)
 }
 
 async function start() {
+    const { auth, setServer, definitionCount } = await import("@cob/dashboard-info")
+
     setServer("https://yourserver.example.com")
-    await auth("username", "password")
-    new DefinitionCount("Persons", showCB, 60, "*")
+    await auth({ username: "username", password: "password" })
+    definitionCount("Persons", "*", { changeCB: showCB, validity: 60 })
 }
 
 start()
