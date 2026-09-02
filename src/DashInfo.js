@@ -24,6 +24,9 @@ const ReadyOld = "cache"
 const Error    = "error"
 const MINIMAL_VALIDITY = 30000
 const FAST_UPDATE = 200
+// All localStorage keys are prefixed so the library can clean its own entries
+// without ever touching keys that belong to the host application
+const STORAGE_KEY_PREFIX = "cob-dash-info | "
 
 const DashInfo = function({validity=0, changeCB, username, noDelays=false}, getterFunction, getterArgs) {
 
@@ -64,7 +67,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
     "state": { "get": () => this.currentState },
     "href": { "get": () => this.results.href },
     "id": { "get": () => generateId(getterFunction, this.getterArgs) },
-    "cacheId": { "get": () => this.username + ' | ' + this.id }
+    "cacheId": { "get": () => STORAGE_KEY_PREFIX + this.username + ' | ' + this.id }
   })
   
   // Quando num browser, parar de fazer Updates quando se sai da página actual. Deve ser feito pela app mas assim é garantido
@@ -227,35 +230,46 @@ DashInfo.prototype._saveInLocalStorage = function(key,part,value) {
     localStorage.setItem(key, newStructuredValueString) 
   } catch {
     // Clean expired information
-    this._cleanStore() 
+    this._cleanStore()
     try {
-      // Try again, to see if removing expired entries was enougth 
-      localStorage.setItem(key, newStructuredValueString) 
+      // Try again, to see if removing expired entries was enougth
+      localStorage.setItem(key, newStructuredValueString)
     } catch (e) {
-      // If it was not, them clear all cache and try again
-      localStorage.clear()
+      // If it was not, them remove ALL of this library's entries (never keys
+      // of the host application) and try again
+      this._ownStoreKeys().forEach( ownKey => localStorage.removeItem(ownKey) )
       try {
-        localStorage.setItem(key, newStructuredValueString) 
-        console.warn("DASH: INFO: _saveInLocalStorage: localStorage full: cleaned")
+        localStorage.setItem(key, newStructuredValueString)
+        console.warn("DASH: INFO: _saveInLocalStorage: localStorage full: cleaned dashboard-info entries")
       } catch (e) {
-        // If, even with all storage available, we have an error, trim and log it 
-        localStorage.setItem(key, newStructuredValueString.substring(0, 5000000) ) 
+        // If, even with all storage available, we have an error, trim and log it
+        localStorage.setItem(key, newStructuredValueString.substring(0, 5000000) )
         console.error("DASH: INFO: _saveInLocalStorage: localStorage not enought for value=", newStructuredValueString)
-      } 
+      }
     }
   }
 }
 
-DashInfo.prototype._cleanStore = function() {
-  // Clean all stored for more then 5 days
-  let now = Date.now()
-  for (var i = 0, len = localStorage.length; i < len; ++i) {
-    let key = localStorage.key(i);
-    let expirationTime = this._getFromLocalStorage(key,"ExpirationTime");
-    if (expirationTime && expirationTime < now) {
-      localStorage.removeItem(key);
-    }
+// Every localStorage key created by this library (and only those)
+DashInfo.prototype._ownStoreKeys = function() {
+  let keys = []
+  for (let i = 0; i < localStorage.length; ++i) {
+    let key = localStorage.key(i)
+    if (key && key.startsWith(STORAGE_KEY_PREFIX)) keys.push(key)
   }
+  return keys
+}
+
+DashInfo.prototype._cleanStore = function() {
+  // Remove this library's expired entries to free up space.
+  // Collect the keys first: removing while iterating localStorage by index skips entries.
+  let now = Date.now()
+  this._ownStoreKeys()
+    .filter( key => {
+      let expirationTime = this._getFromLocalStorage(key, "ExpirationTime")
+      return expirationTime && expirationTime < now
+    })
+    .forEach( key => localStorage.removeItem(key) )
 }
 
 export default DashInfo

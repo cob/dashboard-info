@@ -24,7 +24,7 @@ function delay(t, v) {
 test('every DashInfo value starts by having the last cached value',  async () => {
 
     //Setup cache with "42", the answer for everything
-    localStorage.setItem("anonymous | test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
+    localStorage.setItem("cob-dash-info | anonymous | test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
 
     let zeroTest = new DashInfo( {validity:0, noDelays:true}, newCountCalls(0,"test1") )
     expect(zeroTest.value).toBe(42)
