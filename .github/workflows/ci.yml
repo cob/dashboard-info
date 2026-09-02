@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      # Only the offline unit tests run here. The remaining suites are
+      # integration tests against https://learning.cultofbits.com and depend
+      # on that server's data (see README.Development.md); run them locally
+      # with `npm test`.
+      - run: npm run test:unit
+      - run: npm run build

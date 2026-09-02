@@ -17,6 +17,10 @@ or
 npm run test <TestFileName>
 ```
 
+Tests come in two flavors:
+* **unit tests** (`tests/unit/`) — run offline, no server needed: `npm run test:unit`. These also run in CI (GitHub Actions) for every push/PR, together with `npm run lint` and the webpack build.
+* **integration tests** (the remaining `tests/*.test.js`) — run against https://learning.cultofbits.com and require the baseline data described below.
+
 However these test are supposed to be running continuously throughout the development process. 
 For this first make sure you have jest cli installed:
 
