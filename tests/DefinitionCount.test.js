@@ -1,5 +1,5 @@
 /** @jest-environment node */ //For auth
-import definitionCount from "../src/DefinitionCount.js"
+import { definitionCount } from "../src/Counts.js"
 import { auth, rmAddInstance, rmDeleteInstance } from "@cob/rest-api-wrapper"
 
 

@@ -9,6 +9,8 @@ const instancesList = ({definitionName, query, size, start, sort, ascending, tz}
       href: response.resultsUrl
     })
   )
-  .catch ( e => { throw(e) })
+
+// Explicit id for DashInfo cache keys: survives function-name minification
+instancesList.id = "instancesList"
 
 export default instancesList

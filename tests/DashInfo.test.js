@@ -24,7 +24,7 @@ function delay(t, v) {
 test('every DashInfo value starts by having the last cached value',  async () => {
 
     //Setup cache with "42", the answer for everything
-    localStorage.setItem("anonymous | test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
+    localStorage.setItem("cob-dash-info | anonymous | test1", JSON.stringify( { "Results": JSON.stringify({value:42}) } ));
 
     let zeroTest = new DashInfo( {validity:0, noDelays:true}, newCountCalls(0,"test1") )
     expect(zeroTest.value).toBe(42)
@@ -34,6 +34,7 @@ test('every DashInfo value starts by having the last cached value',  async () =>
 
 test('DashInfo should only have a new value every *validity* seconds, in this case 1s ',  async () => {
     let countInfo = new DashInfo( {validity:0.1, noDelays:true}, newCountCalls(0, "test2"))
+    const start = Date.now()
     try {
         expect(countInfo.value).toBeUndefined()
         
@@ -49,7 +50,12 @@ test('DashInfo should only have a new value every *validity* seconds, in this ca
         await nop() 
         expect(countInfo.value).toBe(1) // Shouldn't change
 
-        await delay(170)
+        // Land mid-way into the second validity window: the refresh happens at
+        // ~100ms and the following one at ~200ms, so assert at ~150ms measured
+        // from the start — immune to the accumulated overhead of the awaits above
+        // (a fixed delay(170) put this assert right at the ~200ms boundary,
+        // observing 2 or 3 depending on the machine's timer precision)
+        await delay(150 - (Date.now() - start))
         expect(countInfo.value).toBe(2) // CHANGE TIME !
         // await nop() 
         // expect(countInfo.value).toBe(2) // Shouldn't change

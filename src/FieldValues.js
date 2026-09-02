@@ -15,7 +15,7 @@ const sortFunction = (sortField, direction, a, b) => {
 
   // Check if both are numbers
   const isNumA = typeof xA === "number" || isNumeric(xA);
-  const isNumB = typeof xB === "number" || isNumeric(xA);
+  const isNumB = typeof xB === "number" || isNumeric(xB);
 
   if (isNumA && isNumB) {
       // Compare numerically
@@ -72,4 +72,8 @@ const fieldValues = ({def, fieldName, query, size=10, sort="", ascending="asc", 
     })
 }
 
+// Explicit id for DashInfo cache keys: survives function-name minification
+fieldValues.id = "fieldValues"
+
 export default fieldValues
+export { sortFunction }

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import domainCount from "../src/DomainCount.js"
+import { domainCount } from "../src/Counts.js"
 
 test('for learning app, demo domain count for "Arab world" is 22', (done) => {
     domainCount( { domainId:2, query:"Arab world"} )
