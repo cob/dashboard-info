@@ -251,28 +251,53 @@ DashInfo.prototype._saveInLocalStorage = function(key,part,value) {
   let structuredValue = this._getStructureFromLocalStorage(key)
   structuredValue[part] = value
   const newStructuredValueString = JSON.stringify(structuredValue)
-  try {
-    localStorage.setItem(key, newStructuredValueString) 
-  } catch {
-    // Clean expired information
-    this._cleanStore()
-    try {
-      // Try again, to see if removing expired entries was enougth
-      localStorage.setItem(key, newStructuredValueString)
-    } catch (e) {
-      // If it was not, them remove ALL of this library's entries (never keys
-      // of the host application) and try again
-      this._ownStoreKeys().forEach( ownKey => localStorage.removeItem(ownKey) )
-      try {
-        localStorage.setItem(key, newStructuredValueString)
-        console.warn("DASH: INFO: _saveInLocalStorage: localStorage full: cleaned dashboard-info entries")
-      } catch (e) {
-        // If, even with all storage available, we have an error, trim and log it
-        localStorage.setItem(key, newStructuredValueString.substring(0, 5000000) )
-        console.error("DASH: INFO: _saveInLocalStorage: localStorage not enought for value=", newStructuredValueString)
-      }
-    }
+
+  // The cache is only an optimisation: failing to store something must never fail
+  // the query that produced it (nor leave a stale or truncated entry behind, that would be
+  // served later as if it was good). Hence this function never throws.
+  if (this._storeMakingRoom(key, newStructuredValueString, part === "Results")) return
+
+  try { localStorage.removeItem(key) } catch { /* nothing else to do */ }
+  if (!this._warnedNoRoom) {
+    this._warnedNoRoom = true
+    console.warn("DASH: INFO: _saveInLocalStorage: not enough localStorage, going on without cache for key=", key, " (", newStructuredValueString.length, "chars )")
   }
+}
+
+// Tries to store, freeing space only if needed and only with this library's entries (never the host application's):
+//  1. plain setItem
+//  2. remove the expired entries
+//  3. remove the other entries one by one, the ones that expire first (the least recently refreshed) go first
+//     and the ones being updated right now (maybe by another tab) go last, retrying after each one
+// Returns whether it was stored. When even with no other entry it does not fit (a value that is bigger than the whole
+// quota) we remember it, so the next refreshes of that same query don't empty the whole cache again just to fail.
+DashInfo.prototype._storeMakingRoom = function(key, text, isResults) {
+  const store = () => { try { localStorage.setItem(key, text); return true } catch { return false } }
+  if (store()) { if (isResults) this._resultsDontFit = false; return true }
+  if (isResults && this._resultsDontFit) return false
+
+  this._cleanStore()
+  if (store()) return true
+
+  for (const ownKey of this._evictionOrder(key)) {
+    try { localStorage.removeItem(ownKey) } catch { /* try the next */ }
+    if (store()) return true
+  }
+  if (isResults) this._resultsDontFit = true
+  return false
+}
+
+// This library's entries, except the one being written, in the order they should be evicted
+DashInfo.prototype._evictionOrder = function(exceptKey) {
+  const inFlight = (state) => state === Loading || state === Updating
+  return this._ownStoreKeys()
+    .filter( ownKey => ownKey !== exceptKey )
+    .map( ownKey => {
+      const entry = this._getStructureFromLocalStorage(ownKey)
+      return { ownKey, inFlight: inFlight(entry.State), expiration: entry.ExpirationTime || 0 }
+    })
+    .sort( (a, b) => (a.inFlight - b.inFlight) || (a.expiration - b.expiration) )
+    .map( e => e.ownKey )
 }
 
 // Every localStorage key created by this library (and only those)
