@@ -5,7 +5,7 @@ if(typeof window == "undefined") {
   global.window = {
     addEventListener : () => {}
   }
-  
+
   //Add support for localStorage in node
   if (typeof global.localStorage === 'undefined') {
     global.localStorage = new Storage('./.localstorage.json', { strict: false, ws: '  ' });
@@ -55,7 +55,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
 
   if(DEBUG.info) this.uniqueId = Math.floor(Math.random() * Date.now()) // Just for debugging purposes
   this.updateCycle = validity != 0 // don't launch cycle if validity == 0
-  this.refreshInterval = validity * 1000 // Specified in seconds 
+  this.refreshInterval = validity * 1000 // Specified in seconds
   this.changeCB = changeCB
   this.currentState = Loading
   this.getterArgs = getterArgs || {}
@@ -65,7 +65,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   this.updating = false;
   this.noDelays = noDelays
 
-  
+
   // Generate a unique id based on the getter function and its arguments.
   // The args can be literal objects when dealing with httpPost and httpGet,
   // so we stringify them to avoid key conflicts between same concurrent calls.
@@ -73,7 +73,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   // names, and two different getters sharing a mangled name would collide
   const generateId = (func, args) => [
     func.id || func.name,
-    ...Object.values(args).map(val => 
+    ...Object.values(args).map(val =>
       (typeof val === 'object' && val !== null) ? JSON.stringify(val) : String(val)
     )
   ].join(" | ");
@@ -85,7 +85,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
     "id": { "get": () => generateId(getterFunction, this.getterArgs) },
     "cacheId": { "get": () => STORAGE_KEY_PREFIX + this.username + ' | ' + this.id }
   })
-  
+
   // Quando num browser, parar de fazer Updates quando se sai da página actual. Deve ser feito pela app mas assim é garantido
   activeInstances.add(this)
   registerUnloadListener()
@@ -121,7 +121,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       if(this.changeCB) this.changeCB(this.results)
     }
   }
-  
+
   let fastCycle = false
   let currentSharedState = this._getFromLocalStorage(this.cacheId, "State")
   if( (currentSharedState == Loading || currentSharedState == Updating) && !this.updating && !this.stoppedWaitingForCache) {
@@ -136,7 +136,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       this.stoppedWaitingForCache = true
       this.waitingForCache = false
       this.waitingForCacheDeadline = 0
-    } 
+    }
     fastCycle = true;
   } else if(this.waitingForCache && !this.stoppedWaitingForCache) {
     if(DEBUG.info) console.log("DASH: INFO: 2.3: startUpdates: waiting over. Received cache  uniqueId=",this.uniqueId," cacheId=",this.cacheId)
@@ -147,7 +147,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
 
   } else if(!this.updating) {
     if(DEBUG.info) console.log("DASH: INFO: 2.4: startUpdates: Eval the need for BE query. uniqueId=",this.uniqueId," cacheId=",this.cacheId)
-  
+
     this.stoppedWaitingForCache = false
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
@@ -164,7 +164,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       this._saveInLocalStorage(this.cacheId, "State", this.currentState)
 
       this.getterFunction(this.getterArgs)
-      .then( results => {  
+      .then( results => {
         if(DEBUG.info) console.log("DASH: INFO: 2.5.2: startUpdates: BE query done. uniqueId=",this.uniqueId," cacheId=",this.cacheId,"results=",results)
 
         this.errorCode = undefined
@@ -178,8 +178,8 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
           if(DEBUG.info) console.log("DASH: INFO: 2.5.2.2: startUpdates: ReadyOld ! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
 
           this.currentState = ReadyOld
-        } 
-        this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))        
+        }
+        this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))
       })
       .catch( e => {
         if(DEBUG.info) console.log("DASH: INFO: 2.5.3: startUpdates: BE query error. uniqueId=",this.uniqueId," cacheId=",this.cacheId)
@@ -251,28 +251,63 @@ DashInfo.prototype._saveInLocalStorage = function(key,part,value) {
   let structuredValue = this._getStructureFromLocalStorage(key)
   structuredValue[part] = value
   const newStructuredValueString = JSON.stringify(structuredValue)
-  try {
-    localStorage.setItem(key, newStructuredValueString) 
-  } catch {
-    // Clean expired information
-    this._cleanStore()
+
+  // The cache is only an optimisation: failing to store something must never fail
+  // the query that produced it (nor leave a stale or truncated entry behind, that would be
+  // served later as if it was good). Hence this function never throws.
+  if (this._storeMakingRoom(key, newStructuredValueString, part === "Results")) return
+
+  try { localStorage.removeItem(key) } catch { /* nothing else to do */ }
+  if (!this._warnedNoRoom) {
+    this._warnedNoRoom = true
+    console.warn("DASH: INFO: _saveInLocalStorage: not enough localStorage, going on without cache for key=", key, " (", newStructuredValueString.length, "chars )")
+  }
+}
+
+// Tries to store, freeing space only if needed and only with this library's entries (never the host application's):
+//  1. plain setItem
+//  2. remove the expired entries
+//  3. remove the other entries one by one, the ones that expire first (the least recently refreshed) go first
+//     and the ones being updated right now (maybe by another tab) go last, retrying after each one
+// Returns whether it was stored. When even with no other entry it does not fit (a value that is bigger than the whole
+// quota) we remember it, so the next refreshes of that same query don't empty the whole cache again just to fail.
+DashInfo.prototype._storeMakingRoom = function(key, text, isResults) {
+  const store = () => {
     try {
-      // Try again, to see if removing expired entries was enougth
-      localStorage.setItem(key, newStructuredValueString)
-    } catch (e) {
-      // If it was not, them remove ALL of this library's entries (never keys
-      // of the host application) and try again
-      this._ownStoreKeys().forEach( ownKey => localStorage.removeItem(ownKey) )
-      try {
-        localStorage.setItem(key, newStructuredValueString)
-        console.warn("DASH: INFO: _saveInLocalStorage: localStorage full: cleaned dashboard-info entries")
-      } catch (e) {
-        // If, even with all storage available, we have an error, trim and log it
-        localStorage.setItem(key, newStructuredValueString.substring(0, 5000000) )
-        console.error("DASH: INFO: _saveInLocalStorage: localStorage not enought for value=", newStructuredValueString)
-      }
+      localStorage.setItem(key, text);
+      return true
+    } catch {
+      return false
     }
   }
+  if (store()) {
+    if (isResults) this._resultsDontFit = false;
+    return true
+  }
+  if (isResults && this._resultsDontFit) return false
+
+  this._cleanStore()
+  if (store()) return true
+
+  for (const ownKey of this._evictionOrder(key)) {
+    try { localStorage.removeItem(ownKey) } catch { /* try the next */ }
+    if (store()) return true
+  }
+  if (isResults) this._resultsDontFit = true
+  return false
+}
+
+// This library's entries, except the one being written, in the order they should be evicted
+DashInfo.prototype._evictionOrder = function(exceptKey) {
+  const inFlight = (state) => state === Loading || state === Updating
+  return this._ownStoreKeys()
+    .filter( ownKey => ownKey !== exceptKey )
+    .map( ownKey => {
+      const entry = this._getStructureFromLocalStorage(ownKey)
+      return { ownKey, inFlight: inFlight(entry.State), expiration: entry.ExpirationTime || 0 }
+    })
+    .sort( (a, b) => (a.inFlight - b.inFlight) || (a.expiration - b.expiration) )
+    .map( e => e.ownKey )
 }
 
 // Every localStorage key created by this library (and only those)
