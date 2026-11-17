@@ -5,7 +5,7 @@ if(typeof window == "undefined") {
   global.window = {
     addEventListener : () => {}
   }
-  
+
   //Add support for localStorage in node
   if (typeof global.localStorage === 'undefined') {
     global.localStorage = new Storage('./.localstorage.json', { strict: false, ws: '  ' });
@@ -55,7 +55,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
 
   if(DEBUG.info) this.uniqueId = Math.floor(Math.random() * Date.now()) // Just for debugging purposes
   this.updateCycle = validity != 0 // don't launch cycle if validity == 0
-  this.refreshInterval = validity * 1000 // Specified in seconds 
+  this.refreshInterval = validity * 1000 // Specified in seconds
   this.changeCB = changeCB
   this.currentState = Loading
   this.getterArgs = getterArgs || {}
@@ -65,7 +65,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   this.updating = false;
   this.noDelays = noDelays
 
-  
+
   // Generate a unique id based on the getter function and its arguments.
   // The args can be literal objects when dealing with httpPost and httpGet,
   // so we stringify them to avoid key conflicts between same concurrent calls.
@@ -73,7 +73,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
   // names, and two different getters sharing a mangled name would collide
   const generateId = (func, args) => [
     func.id || func.name,
-    ...Object.values(args).map(val => 
+    ...Object.values(args).map(val =>
       (typeof val === 'object' && val !== null) ? JSON.stringify(val) : String(val)
     )
   ].join(" | ");
@@ -85,7 +85,7 @@ const DashInfo = function({validity=0, changeCB, username, noDelays=false}, gett
     "id": { "get": () => generateId(getterFunction, this.getterArgs) },
     "cacheId": { "get": () => STORAGE_KEY_PREFIX + this.username + ' | ' + this.id }
   })
-  
+
   // Quando num browser, parar de fazer Updates quando se sai da página actual. Deve ser feito pela app mas assim é garantido
   activeInstances.add(this)
   registerUnloadListener()
@@ -121,7 +121,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       if(this.changeCB) this.changeCB(this.results)
     }
   }
-  
+
   let fastCycle = false
   let currentSharedState = this._getFromLocalStorage(this.cacheId, "State")
   if( (currentSharedState == Loading || currentSharedState == Updating) && !this.updating && !this.stoppedWaitingForCache) {
@@ -136,7 +136,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       this.stoppedWaitingForCache = true
       this.waitingForCache = false
       this.waitingForCacheDeadline = 0
-    } 
+    }
     fastCycle = true;
   } else if(this.waitingForCache && !this.stoppedWaitingForCache) {
     if(DEBUG.info) console.log("DASH: INFO: 2.3: startUpdates: waiting over. Received cache  uniqueId=",this.uniqueId," cacheId=",this.cacheId)
@@ -147,7 +147,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
 
   } else if(!this.updating) {
     if(DEBUG.info) console.log("DASH: INFO: 2.4: startUpdates: Eval the need for BE query. uniqueId=",this.uniqueId," cacheId=",this.cacheId)
-  
+
     this.stoppedWaitingForCache = false
     //Se a cache está fora de validade OU o tempo que falta para expirar é maior que a validade OU ainda não tem um valor, então obtem novo valor
     let now = Date.now();
@@ -164,7 +164,7 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
       this._saveInLocalStorage(this.cacheId, "State", this.currentState)
 
       this.getterFunction(this.getterArgs)
-      .then( results => {  
+      .then( results => {
         if(DEBUG.info) console.log("DASH: INFO: 2.5.2: startUpdates: BE query done. uniqueId=",this.uniqueId," cacheId=",this.cacheId,"results=",results)
 
         this.errorCode = undefined
@@ -178,8 +178,8 @@ DashInfo.prototype.startUpdates = function ({start=true, forceUpdate=false}={}) 
           if(DEBUG.info) console.log("DASH: INFO: 2.5.2.2: startUpdates: ReadyOld ! uniqueId=",this.uniqueId," cacheId=",this.cacheId)
 
           this.currentState = ReadyOld
-        } 
-        this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))        
+        }
+        this._saveInLocalStorage(this.cacheId, "Results", JSON.stringify(this.results))
       })
       .catch( e => {
         if(DEBUG.info) console.log("DASH: INFO: 2.5.3: startUpdates: BE query error. uniqueId=",this.uniqueId," cacheId=",this.cacheId)
@@ -272,8 +272,18 @@ DashInfo.prototype._saveInLocalStorage = function(key,part,value) {
 // Returns whether it was stored. When even with no other entry it does not fit (a value that is bigger than the whole
 // quota) we remember it, so the next refreshes of that same query don't empty the whole cache again just to fail.
 DashInfo.prototype._storeMakingRoom = function(key, text, isResults) {
-  const store = () => { try { localStorage.setItem(key, text); return true } catch { return false } }
-  if (store()) { if (isResults) this._resultsDontFit = false; return true }
+  const store = () => {
+    try {
+      localStorage.setItem(key, text);
+      return true
+    } catch {
+      return false
+    }
+  }
+  if (store()) {
+    if (isResults) this._resultsDontFit = false;
+    return true
+  }
   if (isResults && this._resultsDontFit) return false
 
   this._cleanStore()
